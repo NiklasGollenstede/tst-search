@@ -1,0 +1,56 @@
+{
+	"name": "tst-search",
+	"version": "0.0.1",
+	"title": "TST Tab Search",
+	"description": "Filter Tree Style Tab's sidebar by search terms.",
+	"author": "Niklas Gollenstede",
+	"license": "MPL-2.0",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/NiklasGollenstede/tst-search"
+	},
+	"homepage": "https://github.com/NiklasGollenstede/tst-search#readme",
+	"keywords": [ "browser", "webextension", "tree style tabs", "tabs", "search" ],
+	"contributions": [ {
+		"what": { "name": "Joshua Tree icon", "url": "https://www.flaticon.com/free-icon/joshua-tree_1867378" },
+		"who": { "name": "Freepik", "url": "https://www.flaticon.com/authors/freepik" },
+		"license": { "name": "Flaticon License" }
+	}, {
+		"what": { "name": "Magnifying Glass icon", "url": "https://www.flaticon.com/free-icon/magnifying-glass_3721591" },
+		"who": { "name": "Freepik", "url": "https://www.flaticon.com/authors/freepik" },
+		"license": { "name": "Flaticon License" }
+	} ],
+	"dependencies": {
+		"es6lib": "0.0.3",
+		"multiport": "0.2.3",
+		"pbq": "0.5.0",
+		"web-ext-build": "0.1.1",
+		"web-ext-utils": "0.1.14"
+	},
+	"devDependencies": {
+		"eslintrc": "github:NiklasGollenstede/eslintrc#2b83830",
+		"@typescript-eslint/eslint-plugin": "^4.1.1",
+		"ghooks": "^2.0.4"
+	},
+	"scripts": {
+		"postinstall": "npm run build",
+		"start": "npm run build",
+		"build": "web-ext-build release-zip",
+		"watch": "web-ext-build beta-watch",
+		"sign": "web-ext-build beta-sign",
+		"lint": "eslintrc --ignore-path .gitignore --ext=.js,.ts ."
+	},
+	"config": {
+		"ghooks": {
+			"pre-commit": "npm run lint --silent -- --color"
+		},
+		"web-ext-utils": {
+			"srcDir": "src/",
+			"viewName": "tstSearch"
+		}
+	},
+	"eslintConfig": {
+		"extends": "./node_modules/eslintrc/web-ext.js",
+		"root": true
+	}
+}

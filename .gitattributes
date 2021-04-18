@@ -1,0 +1,2 @@
+# treat lock file as binary (no diff, no line count, no EOL normalization)
+package-lock.json binary
