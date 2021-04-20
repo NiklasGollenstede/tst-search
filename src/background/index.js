@@ -1,5 +1,5 @@
 (function(global) { 'use strict'; define(async ({ // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	'node_modules/web-ext-utils/browser/': { manifest, Runtime, Windows, },
+	'node_modules/web-ext-utils/browser/': { manifest, Runtime, Windows, Tabs, },
 	'node_modules/web-ext-utils/browser/messages': messages,
 	'node_modules/web-ext-utils/utils/notify': notify,
 	'common/options': options,
@@ -26,7 +26,6 @@ async function register() {
 	(await TST.registerSelf({
 		name: manifest.name,
 		icons: manifest.icons,
-		permissions: [ 'tabs', ],
 		listeningTypes: [ 'wait-for-shutdown', ],
 		style: [ 'hit', 'child', 'miss', ].map(name => Object.values(options.result.children[name].children.styles.children).map(_=>_.value).join('')).join(''),
 		subPanel: {
@@ -81,7 +80,15 @@ messages.addHandler(onSubmit); async function onSubmit({
 		term = map(term);
 		matches = tab => typeof tab.title === 'string' && map(tab.title).includes(term);
 	}
-	const tabs = (await TST.getTree({ window: windowId, }));
+	const [rawTabs, treeItems,] = await Promise.all([
+		Tabs.query({ windowId, }),
+		TST.getTree({ window: windowId, }),
+	]);
+	const mapper = treeItem => {
+		treeItem.children = treeItem.children.map(mapper);
+		return { ...rawTabs[treeItem.index], ...treeItem, };
+	};
+	const tabs = treeItems.map(mapper);
 	const result = {
 		matching: new Set,
 		hasChild: new Set,
