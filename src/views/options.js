@@ -5,13 +5,11 @@
 	'background/': { register, },
 }) => async (window, location) => { const { document, } = window;
 
-
 async function onCommand({ name, }, _buttonId) { try { switch (name) {
 	case 'register': {
-		(await register()); notify.info('Registered', `Please make sure to grant ${manifest.name} "Access to browser tabs" in TST's preferences!`);
+		(await register()); notify.info('Registered', `${manifest.name} should now work!`);
 	} break;
 } } catch (error) { notify.error(error); } }
-
 
 (await Inline({ document, onCommand, }, location));
 

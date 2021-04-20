@@ -31,6 +31,7 @@ async function register() {
 		subPanel: {
 			title: manifest.name,
 			url: Runtime.getURL('src/content/embed.html'),
+			initialHeight: '35px', fixedHeight: '35px',
 		},
 	}));
 }
@@ -56,7 +57,7 @@ options.result.onAnyChange(() => register().catch(notify.error));
 
 const classes = {
 	matching: [  'tst-search:matching', ],
-	hasChild: [ 'tst-search:child-matches', ],
+	hasChild: [ 'tst-search:child-matching', ],
 	hidden: [ ],
 	failed: [ 'tst-search:not-matching', ],
 };
@@ -68,10 +69,15 @@ messages.addHandler(onSubmit); async function onSubmit({
 	windowId || (windowId = (await Windows.getCurrent()).id);
 	console.info('TST Search: onSubmit', windowId, this, ...arguments); // eslint-disable-line no-invalid-this
 
+	Object.entries({ matchCase, wholeWord, regExp, }).forEach(([ name, value, ]) => {
+		options.search.children[name].value = value;
+	});
+
 	TST.removeTabState({ tabs: '*', state: [].concat(Object.values(classes)), }).catch(onError);
-	if (!term) { return; }
+	if (!term) { return -1; }
 
 	let matches; if (regExp) {
+		if (wholeWord) { term = String.raw`\b(?:${term})\b`; }
 		const exp = new RegExp(term, matchCase ? '' : 'i');
 		matches = tab => exp.test(tab.title);
 	} else {
@@ -80,15 +86,15 @@ messages.addHandler(onSubmit); async function onSubmit({
 		term = map(term);
 		matches = tab => typeof tab.title === 'string' && map(tab.title).includes(term);
 	}
-	const [rawTabs, treeItems,] = await Promise.all([
+	const [ nativeTabs, treeItems, ] = await Promise.all([
 		Tabs.query({ windowId, }),
 		TST.getTree({ window: windowId, }),
 	]);
-	const mapper = treeItem => {
-		treeItem.children = treeItem.children.map(mapper);
-		return { ...rawTabs[treeItem.index], ...treeItem, };
+	const mergeTabs = treeItem => {
+		treeItem.children = treeItem.children.map(mergeTabs);
+		return { ...nativeTabs[treeItem.index], ...treeItem, };
 	};
-	const tabs = treeItems.map(mapper);
+	const tabs = treeItems.map(mergeTabs);
 	const result = {
 		matching: new Set,
 		hasChild: new Set,
@@ -106,7 +112,15 @@ messages.addHandler(onSubmit); async function onSubmit({
 
 	(await Object.keys(result).map(state => classes[state].length && TST.addTabState({ tabs: Array.from(result[state], _=>_.id), state: classes[state], })));
 
-} catch (error) { notify.error('Error in onSubmit', error); } }
+	return result.matching.size;
+
+} catch (error) { notify.error('Error in onSubmit', error); return -2; } }
+
+messages.addHandler(function getOptions() {
+	return Object.fromEntries(Object.entries(options.search.children).map(pair => {
+		pair[1] = pair[1].value; return pair;
+	}));
+});
 
 
 Object.assign(global, { // for debugging

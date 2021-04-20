@@ -9,9 +9,32 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 const model = {
 	register: {
 		title: `Register with Tree Style Tabs`,
-		description: `If, when this extension was first installed/enabled, Tree Style Tabs itself wasn't installed/enabled, the search may not be registered with TST.<br>Click the button below to repeat that.<br>Also, make sure to grant <i>${manifest.name}</i> the <i>Access to browser tabs</i> under <i>Extra Features</i> in TST's preferences (this should open on first registration).`,
+		description: `If, when this extension was first installed/enabled, Tree Style Tabs itself wasn't installed/enabled, the search may not be registered with TST.<br>Click the button below to repeat that.`,
 		default: true,
 		input: { type: 'control', label: `(re-)register with TST`, id: `register`, },
+	},
+	search: {
+		title: 'Search Options',
+		expanded: true,
+		description: `<small>These are only loaded when the TST sidebar (or a window) is first opened.</small>`,
+		default: true, children: {
+			matchCase: {
+				default: false,
+				input: { type: 'boolean', suffix: `<details><summary>Case Sensitive:</summary>Match the case (capital/small / upper-/lowercase) of the search term to the tabs. Otherwise ignore the case.</details>`, },
+			},
+			wholeWord: {
+				default: false,
+				input: { type: 'boolean', suffix: String.raw`<details><summary>Whole Word:</summary>Let the entered term match only whole words. If "Regular Expression" is also active, the expression will be wrapped in <code>\b(?:</code> <code>)\b</code>.</details>`, },
+			},
+			regExp: {
+				default: false,
+				input: { type: 'boolean', suffix: `<details><summary>Regular Expression:</summary>Search by (JavaScript) regular expression instead of plain string. If you don't know what this is, then you probably don't want it.</details>`, },
+			},
+			placeholder: {
+				default: 'Search ...',
+				input: { type: 'string', prefix: 'Search box placeholder:', suffix: `<small>For those who want to customize/localize things.</small>`, },
+			},
+		},
 	},
 	result: {
 		title: 'Highlight Results',
@@ -28,6 +51,9 @@ const model = {
 						[ 'bold', true, 'Bold Text', String.raw`
 							.tab:not(.pinned).tst-search\:matching .label { font-weight: bold; }
 						`, ],
+						[ 'red', false, 'Red Text', String.raw`
+							.tab:not(.pinned).tst-search\:matching .label { color: red; }
+						`, ],
 					]),
 				},
 			},
@@ -39,6 +65,9 @@ const model = {
 						default: '',
 					}),
 					styles: styles([
+						[ 'red', false, 'Red Text', String.raw`
+							.tab:not(.pinned).tst-search\:child-matching .label { color: red; }
+						`, ],
 					]),
 				},
 			},
@@ -59,6 +88,8 @@ const model = {
 								margin-bottom: -13.3px;
 								transform: scaleY(50%); transform-origin: top;
 							}
+						`, ],[ 'hide', false, 'Hide Completely', String.raw`
+							.tab.tst-search\:not-matching { display: none; }
 						`, ],
 					]),
 				},

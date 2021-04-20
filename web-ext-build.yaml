@@ -1,25 +1,12 @@
 
 include: web-ext-utils
 
-pipelines:
-  default: [ browsers, manifest ]
-  beta: [ beta-infer, default ]
-
-  beta-watch: [ watch-fs, beta-infer ]
-
-  beta-zip:     [ beta,                    write-zip ]
-  release-zip:  [ default,                 write-zip ]
-# beta-sign:    [ beta,    set-update-url, write-zip, write-fs, publish ]
-  release-sign: [ default,                 write-zip, write-fs, publish ]
-
-  beta-sign: [ beta-infer, firefox, manifest, set-update-url, write-zip, write-fs, publish ]
-
-
 stages:
   read-fs:
     options:
       ignore: |
         /resources/
+        /artifacts/
 
   build-manifest:
     options:
@@ -28,8 +15,5 @@ stages:
           - storage
           - notifications
           - tabs
-
-  set-update-url: # TODO: remove
-    from: web-ext-build/stages:setWebExtUpdateUrl
-    options:
-      browsers: [ firefox ]
+      delete:
+        - browser_action

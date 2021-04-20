@@ -10,10 +10,11 @@ const names = [ 'term', 'matchCase', 'wholeWord', 'regExp', ];
 const inputs = Object.fromEntries(names.map(name => [ name, document.getElementById(name), ]));
 function value(input) { return input.type === 'checkbox' ? input.checked : input.value; }
 
-function onChange() {
+async function onChange() {
 	const form = Object.fromEntries(names.map(name => [ name, value(inputs[name]), ]));
 	console.info('TST Search: searching for:', form);
-	messages.post('onSubmit', form);
+	const matches = (await messages.request('onSubmit', form));
+	void matches; // could display this somewhere
 }
 
 Object.values(inputs).forEach(_=>_.addEventListener('change', onChange));
@@ -25,5 +26,9 @@ document.addEventListener('keydown', event => {
 		} break;
 	}
 });
+
+const options = (await messages.request('getOptions'));
+names.slice(1).forEach(name => { inputs[name].checked = options[name]; });
+inputs.term.placeholder = options.placeholder;
 
 }); })(this);
