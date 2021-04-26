@@ -1,18 +1,19 @@
 
 # TST Tab Search -- filter Tree Style Tab's sidebar
 
-This is an extension for the browser extension [Tree Style Tabs](https://github.com/piroor/treestyletab#readme) (TST). It adds a search box at the bottom of TST's sidebar, allowing to search the titles of the tabs in the current window/sidebar, optionally case sensitive, as whole word, or by regular expression.
-Matching tabs will be highlighted in the tree, and/or non-matches will be suppressed.
+This is an extension for the browser extension [Tree Style Tabs](https://github.com/piroor/treestyletab#readme) (TST). It adds a search box at the bottom of TST's sidebar, allowing to search the titles and URLs (or whatever) of the tabs in the current window/sidebar, optionally case sensitive, as whole word, or by regular expression.
+Matching tabs will be highlighted in the tree, and/or non-matches will be suppressed (see extension preferences).
+Should the search bar not show up after installing this extension, then have a look at `about:addons` > "Extensions" > "TST Tab Search".
 
 ![Searching for Cats](./resources/screenshot.png)
 
-Thats pretty much all there is to say. Might add a few more highlight options.
-Many thanks to TST's author [piroor](https://github.com/piroor), who has not only developed TST as a great standalone extension, but also designed a very good API for other extensions to interact and integrate with TST. With that, writing the initial version of this extension from scratch took only about to long afternoons.
+Thats pretty much all there is to say.
+Many thanks to TST's author [piroor](https://github.com/piroor), who has not only developed TST as a great standalone extension, but also designed a very good API for other extensions to interact and integrate with TST. With that, writing the initial version of this extension from scratch took only about two long afternoons.
 
 <b>Permissions used</b>:
 
+- "Access to browser tabs": Get titles of tabs to be searched.
 - "Display notifications to you": Tell you when something goes wrong, (so you should never see this ;) ).
-- "Access to browser tabs" (manually granted via TST): Search titles of tabs.
 
 <!-- NOTE: AMO keeps line breaks within paragraphs ... -->
 

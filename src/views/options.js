@@ -5,6 +5,15 @@
 	'background/': { register, },
 }) => async (window, location) => { const { document, } = window;
 
+document.head.insertAdjacentHTML('beforeend', `<style>
+	/* details in checkbox descriptions */
+	.checkbox-wrapper { vertical-align: top !important; }
+	.value-suffix details[open] { max-width: calc(100% - 40px); }
+
+	/* fix lists in descriptions */
+	.pref-description li:not(#not) { list-style: unset; margin-left: 6px; }
+</style>`);
+
 async function onCommand({ name, }, _buttonId) { try { switch (name) {
 	case 'register': {
 		(await register()); notify.info('Registered', `${manifest.name} should now work!`);

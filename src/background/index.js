@@ -27,7 +27,9 @@ async function register() {
 		name: manifest.name,
 		icons: manifest.icons,
 		listeningTypes: [ 'wait-for-shutdown', ],
-		style: [ 'hit', 'child', 'miss', ].map(name => Object.values(options.result.children[name].children.styles.children).map(_=>_.value).join('')).join(''),
+		style: [ 'hit', 'child', 'miss', ].map(
+			name => Object.values(options.result.children[name].children.styles.children).map(_=>_.value).join('\n')
+		).join('\n') +'\n'+ options.advanced.children.hideHeader.value,
 		subPanel: {
 			title: manifest.name,
 			url: Runtime.getURL('src/content/embed.html'),
@@ -62,30 +64,53 @@ const classes = {
 	failed: [ 'tst-search:not-matching', ],
 };
 
-messages.addHandler(onSubmit); async function onSubmit({
-	term, matchCase, wholeWord, regExp,
+/**
+ * Does the actual search on the tabs in a window. Called from the panel via messaging.
+ * @param {string}   options.term          The term to search for.
+ * @param {boolean}  options.matchCase     See `../common.options.js#model.panel.children.matchCase.input.suffix`.
+ * @param {boolean}  options.wholeWord     See `../common.options.js#model.panel.children.wholeWord.input.suffix`.
+ * @param {boolean}  options.regExp        See `../common.options.js#model.panel.children.regExp.input.suffix`.
+ * @param {boolean}  options.fieldsPrefix  See `../common.options.js#model.search.children.fieldsPrefix.description`.
+ * @param {number?}  options.windowId      Optional. The ID of the window to search.
+ *                                         Defaults to `this?.windowId` (which may be set to the message `sender`) or `Windows.getCurrent().id`.
+ * @returns
+ */
+async function onSubmit({
+	term, matchCase, wholeWord, regExp, fieldsPrefix = options.search.children.fieldsPrefix.value,
 	windowId = this?.windowId, // eslint-disable-line no-invalid-this
 }) { try {
 	windowId || (windowId = (await Windows.getCurrent()).id);
 	console.info('TST Search: onSubmit', windowId, this, ...arguments); // eslint-disable-line no-invalid-this
 
+	// save search flags
 	Object.entries({ matchCase, wholeWord, regExp, }).forEach(([ name, value, ]) => {
-		options.search.children[name].value = value;
+		options.panel.children[name].value = value;
 	});
 
-	TST.removeTabState({ tabs: '*', state: [].concat(Object.values(classes)), }).catch(onError);
-	if (!term) { return -1; }
+	// clear previous search on empty term
+	if (!term) { TST.removeTabState({ tabs: '*', state: [].concat(Object.values(classes)), }).catch(onError); return -1; }
 
+	// pick tab properties to search
+	const fields = [ 'title', 'url', ];
+	if (fieldsPrefix) {
+		const match = (/^(\w+(?:[|]\w+)*): ?(.*)/).exec(term);
+		if (match) { fields.splice(0, Infinity, ...match[1].split('|')); term = match[2]; }
+	}
+
+	// decide how to search tab properties
 	let matches; if (regExp) {
 		if (wholeWord) { term = String.raw`\b(?:${term})\b`; }
 		const exp = new RegExp(term, matchCase ? '' : 'i');
-		matches = tab => exp.test(tab.title);
+		matches = tab => fields.some(key => exp.test(toString(tab[key])));
 	} else {
 		const _map = matchCase ? _=>_ :_=>_.toLowerCase();
 		const map = wholeWord ? _=> ' '+_map(_)+' ' :_=>_map(_);
 		term = map(term);
-		matches = tab => typeof tab.title === 'string' && map(tab.title).includes(term);
+		matches = tab => fields.some(key => map(toString(tab[key])).includes(term));
 	}
+	function toString(prop) { return prop == null ? '' : typeof prop === 'string' ? prop : JSON.stringify(prop); }
+
+	// get tabs
 	const [ nativeTabs, treeItems, ] = await Promise.all([
 		Tabs.query({ windowId, }),
 		TST.getTree({ window: windowId, }),
@@ -95,13 +120,14 @@ messages.addHandler(onSubmit); async function onSubmit({
 		return { ...nativeTabs[treeItem.index], ...treeItem, };
 	};
 	const tabs = treeItems.map(mergeTabs);
+
+	// find search results
 	const result = {
 		matching: new Set,
 		hasChild: new Set,
 		hidden: new Set,
 		failed: new Set,
 	};
-
 	(function search(tabs) { return tabs.map(tab => {
 		if (tab.collapsed || tab.hidden) { result.hidden.add(tab); return false; }
 		let ret = false; {
@@ -110,14 +136,19 @@ messages.addHandler(onSubmit); async function onSubmit({
 		} !ret && result.failed.add(tab); return ret;
 	}).some(_=>_); })(tabs);
 
-	(await Object.keys(result).map(state => classes[state].length && TST.addTabState({ tabs: Array.from(result[state], _=>_.id), state: classes[state], })));
+	// apply findings
+	(await TST.removeTabState({ tabs: '*', state: [].concat(Object.values(classes)), }).catch(error => void onError(error)));
+	(await Promise.all(Object.keys(result).map(
+		state => classes[state].length && result[state].size
+		&& TST.addTabState({ tabs: Array.from(result[state], _=>_.id), state: classes[state], })
+	)));
 
 	return result.matching.size;
 
-} catch (error) { notify.error('Error in onSubmit', error); return -2; } }
-
+} catch (error) { notify.error('Search failed!', error); return -2; } }
+messages.addHandler(onSubmit);
 messages.addHandler(function getOptions() {
-	return Object.fromEntries(Object.entries(options.search.children).map(pair => {
+	return Object.fromEntries(Object.entries(options.panel.children).map(pair => {
 		pair[1] = pair[1].value; return pair;
 	}));
 });

@@ -13,8 +13,8 @@ const model = {
 		default: true,
 		input: { type: 'control', label: `(re-)register with TST`, id: `register`, },
 	},
-	search: {
-		title: 'Search Options',
+	panel: {
+		title: 'Search Box Options',
 		expanded: true,
 		description: `<small>These are only loaded when the TST sidebar (or a window) is first opened.</small>`,
 		default: true, children: {
@@ -37,7 +37,8 @@ const model = {
 		},
 	},
 	result: {
-		title: 'Highlight Results',
+		title: 'Result Highlighting',
+		description: `Choose which styles to apply to tabs of the different search result classes.<br>No styles leaves that class unchanged.`,
 		expanded: true,
 		default: true, children: {
 			hit: {
@@ -68,6 +69,9 @@ const model = {
 						[ 'red', false, 'Red Text', String.raw`
 							.tab:not(.pinned).tst-search\:child-matching .label { color: red; }
 						`, ],
+						[ 'hide', false, 'Hide Completely', String.raw`
+							.tab.tst-search\:child-matching:not(.tst-search\:matching) { display: none; }
+						`, ],
 					]),
 				},
 			},
@@ -88,11 +92,52 @@ const model = {
 								margin-bottom: -13.3px;
 								transform: scaleY(50%); transform-origin: top;
 							}
-						`, ],[ 'hide', false, 'Hide Completely', String.raw`
+						`, ],
+						[ 'hide', false, 'Hide Completely', String.raw`
 							.tab.tst-search\:not-matching { display: none; }
 						`, ],
 					]),
 				},
+			},
+		},
+	},
+	search: {
+		title: 'Search Options',
+		expanded: true,
+		description: ``,
+		default: true, children: {
+			fieldsPrefix: {
+				title: 'Tab Property Prefixes',
+				description: String.raw`By default ${manifest.name} will look for the search term, according to the flags set, in the tab's title (the text displayed in the tooltip when holding the mouse cursor the tab) and the URL (the web address displayed at the center top of the window when the tab is active). This should do for most users most of the time.<br>
+				<details><summary>Most users? Go on ...</summary>
+					With this option active, the search term can be prefixed with a pipe separated list of tab property names, followed by a colon and an optional space (i.e. matching <code>/^\w+([|]\w+)*: ?/</code>). If such a prefix is found, it is removed from the search term, and the listed properties (converted to strings: empty if <code>null</code>ish, otherwise as JSON (w/o spaces) if not a <code>string</code>) are searched, instead of the default <code>title</code> and <code>url</code>.<br>
+					This is probably mostly useful for developers. But if one knows what to search for, there is some interesting stuff to be found:<ul>
+						<li>tabs playing audio: <code>audible: true</code></li>
+						<li>muted tabs: <code>mutedInfo: "muted":true</code></li>
+						<li>tabs with SVG favicons: <code>favIconUrl: [./]svg\b</code> (<code>.*</code>)</li>
+						<li>tabs by container (ID): <code>cookieStoreId: firefox-container-1</code></li>
+						<li>loaded tabs: <code>discarded: false</code></li>
+						<li>tabs by ID: <code>id: ^42$</code> (<code>.*</code>)</li>
+					</ul>
+				</details>`,
+				default: false,
+				input: { type: 'boolean', suffix: `enable field prefixes`, },
+			},
+		},
+	},
+	advanced: {
+		title: 'Experimental/Advanced Options',
+		expanded: false,
+		description: `Advanced and/or experimental options, that may break and/or disappear at any time. These may also require a reload of TST, this extension or the sidebars to apply.`,
+		default: true, children: {
+			hideHeader: {
+				title: 'Hide Header',
+				description: `Hides the header above the search, that says something like "${manifest.name}".<br>NOTE: That header is not part of this extension, but of TST itself, and from a UX perspective, should absolutely be there (by default). It may (in the future?) also be used to switch sub panels or do any number of other things. Please DO NOT raise issues about anything loke that with TST while this option is active!`,
+				default: '',
+				input: { type: 'boolInt', suffix: `I vow to have read the above and not to annoy TST's authors about it.`, off: '', on: `
+					#subpanel-container { height: 35px !important; }
+					#subpanel-header { display: none !important; }
+				`, },
 			},
 		},
 	},
