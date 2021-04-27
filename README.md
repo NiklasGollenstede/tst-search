@@ -3,7 +3,7 @@
 
 This is an extension for the browser extension [Tree Style Tabs](https://github.com/piroor/treestyletab#readme) (TST). It adds a search box at the bottom of TST's sidebar, allowing to search the titles and URLs (or whatever) of the tabs in the current window/sidebar, optionally case sensitive, as whole word, or by regular expression.
 Matching tabs will be highlighted in the tree, and/or non-matches will be suppressed (see extension preferences).
-Should the search bar not show up after installing this extension, then have a look at `about:addons` > "Extensions" > "TST Tab Search".
+Should the search bar not show up after installing this extension, then have a look at `about:addons` > "Extensions" > "TST Tab Search" > "Preferences".
 
 ![Searching for Cats](./resources/screenshot.png)
 

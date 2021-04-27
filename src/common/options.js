@@ -16,7 +16,7 @@ const model = {
 	panel: {
 		title: 'Search Box Options',
 		expanded: true,
-		description: `<small>These are only loaded when the TST sidebar (or a window) is first opened.</small>`,
+		description: `<small>These are only applied when the search box is newly loaded in TST's sidebar. Click <code>(re-)register</code> above to force that.</small>`,
 		default: true, children: {
 			matchCase: {
 				default: false,
@@ -30,9 +30,17 @@ const model = {
 				default: false,
 				input: { type: 'boolean', suffix: `<details><summary>Regular Expression:</summary>Search by (JavaScript) regular expression instead of plain string. If you don't know what this is, then you probably don't want it.</details>`, },
 			},
+			darkTheme: {
+				default: null,
+				input: { type: 'menulist', options: [
+					{ value: null,   label: `auto`, },
+					{ value: false,  label: `light`, },
+					{ value: true,   label: `dark`, },
+				], prefix: `Color theme:`, },
+			},
 			placeholder: {
 				default: 'Search ...',
-				input: { type: 'string', prefix: 'Search box placeholder:', suffix: `<small>For those who want to customize/localize things.</small>`, },
+				input: { type: 'string', prefix: 'Search box placeholder:', },
 			},
 		},
 	},
@@ -128,11 +136,11 @@ const model = {
 	advanced: {
 		title: 'Experimental/Advanced Options',
 		expanded: false,
-		description: `Advanced and/or experimental options, that may break and/or disappear at any time. These may also require a reload of TST, this extension or the sidebars to apply.`,
+		description: `Advanced and/or experimental options, that may break and/or disappear at any time.<br>These may also require a reload of TST, this extension or the sidebars to apply.`,
 		default: true, children: {
 			hideHeader: {
 				title: 'Hide Header',
-				description: `Hides the header above the search, that says something like "${manifest.name}".<br>NOTE: That header is not part of this extension, but of TST itself, and from a UX perspective, should absolutely be there (by default). It may (in the future?) also be used to switch sub panels or do any number of other things. Please DO NOT raise issues about anything loke that with TST while this option is active!`,
+				description: `Hides the header above the search, that says something like "${manifest.name}". Requires re-registering above. On older versions of TST (before v3.7.5), also make sure to correctly size the panel before.<br>NOTE: That header is not part of this extension, but of TST itself, and from a UX perspective, should absolutely be there (by default). It may (in the future?) also be used to switch sub panels or do any number of other things. Please DO NOT raise issues about anything like that with TST while this option is active!`,
 				default: '',
 				input: { type: 'boolInt', suffix: `I vow to have read the above and not to annoy TST's authors about it.`, off: '', on: `
 					#subpanel-container { height: 35px !important; }

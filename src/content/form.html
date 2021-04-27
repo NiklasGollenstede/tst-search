@@ -24,6 +24,9 @@
 		margin: 2px; height: 19px; width: 19px;
 		border: 1px solid;
 	}
+	#options label:not(:hover) div {
+		opacity: .75;
+	}
 	#options input:not(:checked) + label {
 		background-color: transparent;
 		border-color: transparent;
@@ -55,17 +58,17 @@
 	}
 	#options label div { border-color: var(--button-fgc); }
 	/* light */ :root {
-		--input-bgc: #e2e1d5;
+		--input-bgc: #f9f9fa;
 		--input-fgc: #222;
 		--button-bgc: #0002;
 		--button-bdc: #0005;
-		--button-fgc: #444;
+		--button-fgc: #000;
 	}
-	@media (prefers-color-scheme: dark) { :root {
+	:root.dark-theme {
 		--input-bgc: #1D2328;
 		--input-fgc: #ddd;
 		--button-bgc: #fff3;
 		--button-bdc: #fff5;
-		--button-fgc: #aaa;
-	} }
+		--button-fgc: #fff;
+	}
 </style>

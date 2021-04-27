@@ -3,6 +3,8 @@
 	'fetch!./form.html': form_html,
 }) => {
 
+document.documentElement.classList.toggle('dark-theme', global.matchMedia('(prefers-color-scheme: dark)').matches);
+
 document.body.insertAdjacentHTML('beforeend', form_html);
 
 const names = [ 'term', 'matchCase', 'wholeWord', 'regExp', ];
@@ -30,5 +32,11 @@ document.addEventListener('keydown', event => {
 const options = (await messages.request('getOptions'));
 names.slice(1).forEach(name => { inputs[name].checked = options[name]; });
 inputs.term.placeholder = options.placeholder;
+if (options.darkTheme != null) {
+	document.documentElement.classList.toggle('dark-theme', options.darkTheme);
+} else {
+	global.matchMedia('(prefers-color-scheme: dark)').onchange = ({ matches, }) =>
+	document.documentElement.classList.toggle('dark-theme', matches);
+}
 
 }); })(this);
