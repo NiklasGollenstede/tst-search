@@ -32,6 +32,7 @@ document.addEventListener('keydown', event => {
 const options = (await messages.request('getOptions'));
 names.slice(1).forEach(name => { inputs[name].checked = options[name]; });
 inputs.term.placeholder = options.placeholder;
+document.documentElement.classList.toggle('hide-options', options.hideOptions);
 if (options.darkTheme != null) {
 	document.documentElement.classList.toggle('dark-theme', options.darkTheme);
 } else {

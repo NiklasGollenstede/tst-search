@@ -30,6 +30,10 @@ const model = {
 				default: false,
 				input: { type: 'boolean', suffix: `<details><summary>Regular Expression:</summary>Search by (JavaScript) regular expression instead of plain string. If you don't know what this is, then you probably don't want it.</details>`, },
 			},
+			hideOptions: {
+				default: false,
+				input: { type: 'boolean', suffix: `<details><summary>Hide Search Options:</summary>Don't show the buttons for the three search options above in the search box. Note that what is selected on this page will still apply to the search.`, },
+			},
 			darkTheme: {
 				default: null,
 				input: { type: 'menulist', options: [
