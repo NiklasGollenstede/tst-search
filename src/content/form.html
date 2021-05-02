@@ -1,15 +1,24 @@
 <input id="term" type="text" placeholder="Search ...">
 <div id="options"><!--
+	--><input id="clearTerm" type="button"  ><label class="clearTerm" for="clearTerm"><div title="clear search (Esc)">⨉</div></label><!--
+	--><div   id="matchIndex"                       class="matchIndex"></div><!--
 	--><input id="matchCase" type="checkbox"><label class="matchCase" for="matchCase"><div title="case sensitive">Aa</div></label><!--
 	--><input id="wholeWord" type="checkbox"><label class="wholeWord" for="wholeWord"><div title="whole word">wrd</div></label><!--
-	--><input id="regExp" type="checkbox"><label class="regExp" for="regExp"><div title="regular expression">.*</div></label>
+	--><input id="regExp"    type="checkbox"><label class="regExp"    for="regExp"   ><div title="regular expression">.*</div></label>
 </div>
 <p class="notice">(resize above to hide this)</p><!-- should only show for TST before v3.7.5 -->
 <style>
-	body { margin: 5px; overflow: hidden; }
+	:root {
+		--clear-width: 17px;
+		--count-width: 0px;
+		--flags-width: calc(30px + 33px + 25px);
+		--options-width: calc(var(--clear-width) + var(--count-width) + var(--flags-width));
+	}
+	* { box-sizing: border-box; }
+	body { margin: 5px; overflow: hidden; font-family: sans-serif; }
 	#term {
-		margin: 0; padding: 2px 85px 2px 5px;
-		width: calc(100% - 90px);
+		margin: 0; padding: 2px calc(var(--options-width) + 5px) 2px 5px;
+		width: 100%;
 		border: none; border-radius: 3px;
 		line-height: 21px;
 	}
@@ -17,31 +26,52 @@
 		float: right; position: relative;
 		top: -25px; height: 25px;
 	}
-	#options label {
+	#options>div,
+	#options>label {
 		font-size: 12px; font-family: serif;
-		text-align: center; line-height: calc(19px + 1px);
+		text-align: center; line-height: calc(19px + .5px);
 		display: inline-block; overflow: hidden;
-		margin: 2px; height: 19px; width: 19px;
+		margin: 2px; height: 21px; width: 21px;
 		border: 1px solid;
+		cursor: pointer;
 	}
 	#options label:not(:hover) div {
 		opacity: .75;
 	}
+
+	#options label.clearTerm {
+		border-radius: 50%;
+		margin: 4.5px 2px 5.5px 2px; height: 15px; width: 15px;
+		line-height: 12px;
+	}
+	#options label.clearTerm:hover {
+		background: #f005;
+	}
+
+	#options div.matchIndex {
+		font-family: sans-serif; opacity: .85;
+		cursor: default;
+		width: auto; margin-left: 0;
+		border-color: transparent;
+		background-color: transparent;
+	}
+	#options div.matchIndex:empty { margin: 0; border: none; }
+
 	#options input:not(:checked) + label {
 		background-color: transparent;
 		border-color: transparent;
 	}
-	#options label.matchCase { width: 24px; }
-	#options label.wholeWord { width: 24px; }
+	#options label.matchCase { width: 26px; }
+	#options label.wholeWord { width: 29px; }
 	#options label.wholeWord div::after {
 		content: ''; opacity: 0.8;
 		display: block; position: relative;
-		height: 12px; width: 100%;
-		top: -17px; right: .5px;
+		height: 12px; width: calc(100% - 2px);
+		top: -17px; left: 1px;
 		border-top: 1px solid; border-bottom: 1px solid;
 	}
 	#options label.regExp { font-weight: bold; }
-	#options input[type=checkbox] { display: none; }
+	#options input { display: none; }
 	.notice {
 		text-align: center;
 		font-size: x-small;
@@ -51,12 +81,13 @@
 
 	/* theme */
 	#term { background-color: var(--input-bgc); color: var(--input-fgc); }
-	#options label {
+	#options>div,
+	#options>label {
 		color: var(--button-fgc);
 		background-color: var(--button-bgc);
 		border-color: var(--button-bdc);
 	}
-	#options label div { border-color: var(--button-fgc); }
+	#options>label>div { border-color: var(--button-fgc); }
 	/* light */ :root {
 		--input-bgc: #f9f9fa;
 		--input-fgc: #222;
@@ -72,6 +103,14 @@
 		--button-fgc: #fff;
 	}
 
-	:root.hide-options #term { padding-right: 5px; width: calc(100% - 10px); }
-	:root.hide-options #options { display: none; }
+	:root.hide-clear { --clear-width: 0px; }
+	:root.hide-clear .clearTerm { display: none !important; }
+
+	:root.hide-count { --count-width: 0px; }
+	:root.hide-count .matchIndex { display: none !important; }
+
+	:root.hide-flags { --flags-width: 0px; }
+	:root.hide-flags .matchCase,
+	:root.hide-flags .wholeWord,
+	:root.hide-flags .regExp { display: none !important; }
 </style>

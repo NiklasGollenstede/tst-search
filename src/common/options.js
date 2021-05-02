@@ -16,7 +16,6 @@ const model = {
 	panel: {
 		title: 'Search Box Options',
 		expanded: true,
-		description: `<small>These are only applied when the search box is newly loaded in TST's sidebar. Click <code>(re-)register</code> above to force that.</small>`,
 		default: true, children: {
 			matchCase: {
 				default: false,
@@ -30,9 +29,17 @@ const model = {
 				default: false,
 				input: { type: 'boolean', suffix: `<details><summary>Regular Expression:</summary>Search by (JavaScript) regular expression instead of plain string. If you don't know what this is, then you probably don't want it.</details>`, },
 			},
-			hideOptions: {
+			hideFlags: {
 				default: false,
-				input: { type: 'boolean', suffix: `<details><summary>Hide Search Options:</summary>Don't show the buttons for the three search options above in the search box. Note that what is selected on this page will still apply to the search.`, },
+				input: { type: 'boolean', suffix: `<details><summary>Hide Search Option Buttons:</summary>Don't show the buttons for the three search options above in the search box. Note that what is selected on this page will still apply to the search.`, },
+			},
+			hideClear: {
+				default: false,
+				input: { type: 'boolean', suffix: `Hide "Clear Search" Button`, },
+			},
+			hideCount: {
+				default: false,
+				input: { type: 'boolean', suffix: `Hide Result Counter/Status`, },
 			},
 			darkTheme: {
 				default: null,
@@ -40,11 +47,11 @@ const model = {
 					{ value: null,   label: `auto`, },
 					{ value: false,  label: `light`, },
 					{ value: true,   label: `dark`, },
-				], prefix: `Color theme:`, },
+				], prefix: `Color Theme:`, },
 			},
 			placeholder: {
 				default: 'Search ...',
-				input: { type: 'string', prefix: 'Search box placeholder:', },
+				input: { type: 'string', prefix: 'Search Box Placeholder:', },
 			},
 		},
 	},
@@ -57,9 +64,6 @@ const model = {
 				title: 'Matches/Hits',
 				description: `Any tabs that themselves match the search.`,
 				default: true, children: {
-					classes: classes({
-						default: '',
-					}),
 					styles: styles([
 						[ 'bold', true, 'Bold Text', String.raw`
 							.tab:not(.pinned).tst-search\:matching .label { font-weight: bold; }
@@ -70,13 +74,24 @@ const model = {
 					]),
 				},
 			},
+			active: {
+				title: 'Active Result',
+				description: `The active search result, which can be scrolled through with <code>Enter</code> and <code>Shift</code>+<code>Enter</code>.`,
+				default: true, children: {
+					styles: styles([
+						[ 'red', true, 'Red Text', String.raw`
+							.tab:not(.pinned).tst-search\:active .label { color: red; }
+						`, ],
+						[ 'bold', false, 'Bold Text', String.raw`
+							.tab:not(.pinned).tst-search\:active .label { font-weight: bold; }
+						`, ],
+					]),
+				},
+			},
 			child: {
 				title: 'With Matching Children',
 				description: `Any tabs with children that match the search.`,
 				default: true, children: {
-					classes: classes({
-						default: '',
-					}),
 					styles: styles([
 						[ 'red', false, 'Red Text', String.raw`
 							.tab:not(.pinned).tst-search\:child-matching .label { color: red; }
@@ -91,9 +106,6 @@ const model = {
 				title: 'Other/Misses',
 				description: `Any tab that neither matches not has matching children.`,
 				default: true, children: {
-					classes: classes({
-						default: '',
-					}),
 					styles: styles([
 						[ 'shrink', true, 'Shrink Height', String.raw`
 							.tab:not(.pinned).collapsed:where(.tst-search\:matching, .tst-search\:child-matches, .tst-search\:not-matching) {
@@ -110,6 +122,16 @@ const model = {
 						`, ],
 					]),
 				},
+			},
+			custom: {
+				title: 'Custom Styles',
+				description: String.raw`Custom CSS to apply to the TST sidebar.<br>
+				${manifest.name} sets the CSS classes <code>tst-search:matching</code>, <code>tst-search:active</code>, <code>tst-search:child-matching</code>, and <code>tst-search:not-matching</code> on tabs in the four result categories above, respectively.<br>
+				For example: <code>.tab:not(.pinned).tst-search\:active .label { color: red; }</code>				`,
+				expanded: false,
+				default: true, children: { styles: { default: true, children: { raw: {
+					default: '', input: { type: 'code', },
+				}, }, }, },
 			},
 		},
 	},
@@ -129,11 +151,19 @@ const model = {
 						<li>tabs with SVG favicons: <code>favIconUrl: [./]svg\b</code> (<code>.*</code>)</li>
 						<li>tabs by container (ID): <code>cookieStoreId: firefox-container-1</code></li>
 						<li>loaded tabs: <code>discarded: false</code></li>
-						<li>tabs by ID: <code>id: ^42$</code> (<code>.*</code>)</li>
+						<li>tabs by ID: <code>id: 42</code> (<code>wrd</code>)</li>
+						<li>a tab and its direct children: <code>id|parent: 42</code> (<code>wrd</code>)</li>
 					</ul>
 				</details>`,
-				default: false,
-				input: { type: 'boolean', suffix: `enable field prefixes`, },
+				default: [ [ false, 'title url', ], ],
+				input: [
+					{ type: 'boolean', suffix: `Enable Field Prefixes<br>`, },
+					{ type: 'string', prefix: `Default Properties:`, },
+				],
+				restrict: [
+					{ type: 'boolean', },
+					{ type: 'string', match: { exp: /^\w+(?:[ ]\w+)*$/, }, },
+				],
 			},
 		},
 	},
@@ -165,19 +195,8 @@ const model = {
 
 return (await new Options({ model, storage, prefix: 'options', })).children;
 
-function classes(options) { return null && {
-	title: 'Additional Tab State',
-	description: `For interoperability with other TST extensions. Space separated list of states to assign to these tabs.`,
-	restrict: { match: {
-		exp: (/^(:?[\w-]+(?:\S+[\w-]+)*)?$/i),
-		message: `Must be a space separated list of words (allowing <code>-</code> and <code>_</code>)`,
-	}, },
-	input: { type: 'string', },
-	...options, // default,
-}; }
 
 function styles(snippets) { return {
-	title: 'Styles',
 	default: true, children: Object.fromEntries(snippets.map(([ name, active, description, css, ]) => [ name, {
 		default: active ? css : '',
 		input: { type: 'boolInt', suffix: description, off: '', on: css, },

@@ -14,12 +14,20 @@ document.head.insertAdjacentHTML('beforeend', String.raw`<style>
 	.pref-description li:not(#not) { list-style: unset; margin-left: 6px; }
 
 	#\.panel\.placeholder input { max-width: 150px; }
+	#\.search\.fieldsPrefix input { max-width: 250px; }
+
+	/* remove one level of indention */
+	.pref-name-result .pref-name-styles .pref-children {
+		border: none; padding: 0; margin: 0;
+	}
 </style>`);
 
 async function onCommand({ name, }, _buttonId) { try { switch (name) {
-	case 'register': {
+	case 'register': { try {
 		(await register()); notify.info('Registered', `${manifest.name} should now work!`);
-	} break;
+	} catch (error) {
+		notify.error('TST Registration Failed', `Are you sure Tree Style Tabs is installed and enabled?\nThis extension won't do anything without that.`);
+	} } break;
 } } catch (error) { notify.error(error); } }
 
 (await Inline({ document, onCommand, }, location));
