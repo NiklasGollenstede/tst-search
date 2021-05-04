@@ -97,7 +97,7 @@ async function onSubmit({
 
 	// clear previous search on empty term
 	if (!term) {
-		TST.removeTabState({ tabs: '*', state: [].concat(Object.values(classes)), }).catch(onError);
+		TST.removeTabState({ tabs: '*', state: [ ].concat(...Object.values(classes)), }).catch(onError);
 		cache = null; delete actives[windowId];
 		return { matches: 0, cleared: true, };
 	}
@@ -179,7 +179,7 @@ async function onSubmit({
 	(await Promise.all([
 		TST.removeTabState({
 			tabs: Array.from(tabs.byId.keys()), // Explicitly pass the IDs, to ensure consistent runtime with the other calls. The IDs have either just been queried, or wrer the ones that the classes were applied to.
-			state: [].concat(Object.values(classes)),
+			state: [ ].concat(...Object.values(classes)),
 		}).catch(error => void onError(error)),
 		...Object.keys(result).map(
 			state => classes[state].length && result[state].size
