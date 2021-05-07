@@ -11,19 +11,20 @@ document.body.insertAdjacentHTML('beforeend', form_html);
 const matchIndex = document.getElementById('matchIndex');
 const names = [ 'term', 'matchCase', 'wholeWord', 'regExp', ];
 const inputs = Object.fromEntries(names.map(name => [ name, document.getElementById(name), ]));
-function value(input) { return input.type === 'checkbox' ? input.checked : input.value; }
+/**@type{(value: string) => string|boolean}*/function value(input) { return input.type === 'checkbox' ? input.checked : input.value; }
 
 async function doSearch(options = { }) {
 	const form = { ...Object.fromEntries(names.map(name => [ name, value(inputs[name]), ])), ...options, };
 	console.info('TST Search: searching for:', form);
-	const result = (await messages.request('onSubmit', form));
+	const result = (await messages.request('doSearch', form));
 	matchIndex.textContent = result.failed ? '??' : result.cleared ? '' : result.index >= 0 ? ((result.index + 1) +' / '+ result.matches) : result.matches || 'none';
 	document.documentElement.style.setProperty('--count-width', matchIndex.clientWidth +'px');
 }
 
-inputs.term.addEventListener('input', () => doSearch({ cached: true, }));
 inputs.term.addEventListener('focus', () => doSearch({ cached: false, }));
-Object.values(inputs).slice(1).forEach(_=>_.addEventListener('change', () => doSearch({ cached: false, })));
+inputs.term.addEventListener('input', () => doSearch({ cached: true, }));
+Object.values(inputs).slice(1).forEach(_=>_.addEventListener('change', () => doSearch({ cached: true, })));
+Object.values(inputs).slice(1).forEach(_=>_.labels[0].addEventListener('mousedown', _=>_.preventDefault())); // prevent textbox from loosing focus
 
 document.addEventListener('keydown', event => {
 	switch (event.code) {

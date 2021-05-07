@@ -20,6 +20,8 @@ document.head.insertAdjacentHTML('beforeend', String.raw`<style>
 	.pref-name-result .pref-name-styles .pref-children {
 		border: none; padding: 0; margin: 0;
 	}
+
+	#\.advanced\.hideHeader .value-suffix { color: darkred; }
 </style>`);
 
 async function onCommand({ name, }, _buttonId) { try { switch (name) {

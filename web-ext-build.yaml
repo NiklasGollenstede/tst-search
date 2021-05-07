@@ -6,7 +6,6 @@ stages:
     options:
       ignore: |
         /resources/
-        /artifacts/
 
   build-manifest:
     options:
