@@ -6,7 +6,6 @@
 	--><input id="wholeWord" type="checkbox"><label class="wholeWord" for="wholeWord"><div title="whole word">wrd</div></label><!--
 	--><input id="regExp"    type="checkbox"><label class="regExp"    for="regExp"   ><div title="regular expression">.*</div></label>
 </div>
-<p class="notice">(resize above to hide this)</p><!-- should only show for TST before v3.7.5 -->
 <style>
 	:root {
 		--clear-width: 17px;
@@ -14,8 +13,12 @@
 		--flags-width: calc(30px + 33px + 25px);
 		--options-width: calc(var(--clear-width) + var(--count-width) + var(--flags-width));
 	}
-	* { box-sizing: border-box; }
-	body { margin: 5px; overflow: hidden; font-family: sans-serif; }
+	:root { overflow: hidden; } * { box-sizing: border-box; }
+	body {
+		margin: 0; padding: 5px; overflow: hidden;
+		font-family: sans-serif;
+		user-select: none;
+	}
 	#term {
 		margin: 0; padding: 2px calc(var(--options-width) + 5px) 2px 5px;
 		width: 100%;
@@ -72,12 +75,6 @@
 	}
 	#options label.regExp { font-weight: bold; }
 	#options input { display: none; }
-	.notice {
-		text-align: center;
-		font-size: x-small;
-		padding: 20px;
-		color: #888;
-	}
 
 	/* theme */
 	#term { background-color: var(--input-bgc); color: var(--input-fgc); }

@@ -1,9 +1,11 @@
 (function(global) { 'use strict'; define(async ({ // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	'node_modules/web-ext-utils/browser/': { manifest, Runtime, Windows, Tabs, },
+	'node_modules/web-ext-utils/browser/': { manifest, Commands, BrowserAction, Runtime, Tabs, Windows, },
 	'node_modules/web-ext-utils/browser/messages': messages,
+	'node_modules/web-ext-utils/loader/views': { getViews, },
 	'node_modules/web-ext-utils/utils/notify': notify,
 	'node_modules/es6lib/functional': { debounce, },
 	'common/options': options,
+	'./util': { updateCommand, },
 	tstApi,
 	require,
 }) => {
@@ -63,7 +65,7 @@ const classes = {
 };
 /**@type{{ tabs: Tab[] & { byId: Map<number, Tab>, }, windowId: number, } | null}*/ let cache = null;
 /**@type{() => undefined}*/ const queueClearCache = debounce(() => { cache = null; }, 30e3);
-/**@type{Record<number, { tabId: number, }>}*/ const actives = { __proto__: null, };
+/**@type{Record<number, { tabId: number, term: string, }>}*/ const windowStates = { __proto__: null, };
 
 /**
  * Does the actual search on the tabs in a window. Called from the panel via messaging.
@@ -83,19 +85,19 @@ const classes = {
  *                                              and making it the target of `focusActiveTab`. The active tab's ID is saved per window,
  *                                              and maintained if it still matches the search, otherwise the next matching tab is selected.
  *                                              Then iff `.seek` is `true` the next next, iff `false` the previous matching tab is activated.
- * @returns { { matches: number, } & ({ index: number, } | { cleared: true, } | { failed: true, }) } The number of search `matches`, plus either:
+ * @returns { Promise<{ matches: number, } & ({ index: number, } | { cleared: true, } | { failed: true, })> } The number of search `matches`, plus either:
  *                                              * if `term` was empty: `cleared: true`;
  *                                              * on search success: the active tab's index (or `-1`);
  *                                              * or on any failure: `failed: true`.
  */
 async function doSearch({
-	windowId = this?.windowId, // eslint-disable-line no-invalid-this
+	windowId = this?.windowId || -1, // eslint-disable-line no-invalid-this
 	term = '', matchCase = false, wholeWord = false, regExp = false,
 	fieldsPrefix = !!options.search.children.fieldsPrefix.value?.[0],
 	fieldsDefault = options.search.children.fieldsPrefix.value?.[1]?.split?.(' ') || [ 'title', 'url', ],
 	cached = false, seek = undefined,
 } = { }) { try {
-	windowId != null || (windowId = (await Windows.getCurrent()).id);
+	(windowId != null && windowId !== -1) || (windowId = (await Windows.getCurrent()).id);
 	debug && console.info('TST Search: doSearch', windowId, this, ...arguments); // eslint-disable-line no-invalid-this
 
 	// save search flags
@@ -106,9 +108,9 @@ async function doSearch({
 	// clear previous search on empty term
 	if (!term) {
 		TST.removeTabState({ tabs: '*', state: [ ].concat(...Object.values(classes)), }).catch(onTstError);
-		cache = null; delete actives[windowId];
+		cache = null; delete windowStates[windowId];
 		return { matches: 0, cleared: true, };
-	}
+	} term += '';
 
 	// pick tab properties to search
 	const fields = fieldsDefault; if (fieldsPrefix) {
@@ -169,18 +171,18 @@ async function doSearch({
 
 	// determine active tab
 	const matching = Array.from(result.matching);
-	const active = actives[windowId] || (actives[windowId] = { tabId: -1, });
-	if (matching.length === 0) { active.tabId = -1; }
-	else if (!tabs.byId.has(active.tabId)) { active.tabId = matching[0].id; }
-	else if (result.matching.has(tabs.byId.get(active.tabId))) { void 0; }
-	else {
-		if (matching.length === 1) { active.tabId = matching[0]; } const prev = tabs.byId.get(active.tabId);
-		active.tabId = (matching.find(tab => tab.index > prev.index) || matching[0]).id;
+	const state = windowStates[windowId] || (windowStates[windowId] = { tabId: -1, });
+	state.term = term;
+	if (matching.length === 0) { state.tabId = -1; }
+	else if (!tabs.byId.get(state.tabId)) { state.tabId = matching[0].id; }
+	else if (!result.matching.has(tabs.byId.get(state.tabId))) {
+		const prev = tabs.byId.get(state.tabId);
+		state.tabId = (matching.find(tab => tab.index > prev.index) || matching[0]).id;
 	}
 	if (typeof seek === 'boolean') { if (matching.length > 1) {
-		const current = matching.indexOf(tabs.byId.get(active.tabId));
-		if (seek) { active.tabId = matching[current + 1 < matching.length ? current + 1 : 0].id; }
-		else      { active.tabId = matching[current - 1 >= 0              ? current - 1 : matching.length - 1].id; }
+		const current = matching.indexOf(tabs.byId.get(state.tabId));
+		if (seek) { state.tabId = matching[current + 1 < matching.length ? current + 1 : 0].id; }
+		else      { state.tabId = matching[current - 1 >= 0              ? current - 1 : matching.length - 1].id; }
 	} }
 
 	// apply tab states
@@ -193,29 +195,36 @@ async function doSearch({
 			state => classes[state].length && result[state].size
 			&& TST.addTabState({ tabs: Array.from(result[state], _=>_.id), state: classes[state], })
 		),
-		typeof seek === 'boolean' && active.tabId >= 0 && TST.scroll({ tab: active.tabId, }).catch(onTstError), // This throws (if the target tab is collapsed?). Also, collapsed tabs aren't scrolled to (the parent).
-		active.tabId >= 0 && TST.addTabState({ tabs: [ active.tabId, ], state: classes.active, }),
+		typeof seek === 'boolean' && state.tabId >= 0 && TST.scroll({ tab: state.tabId, }).catch(onTstError), // This throws (if the target tab is collapsed?). Also, collapsed tabs aren't scrolled to (the parent).
+		state.tabId >= 0 && TST.addTabState({ tabs: [ state.tabId, ], state: classes.active, }),
 	]));
 
-	return ((cache || { }).result = { matches: result.matching.size, index: matching.indexOf(tabs.byId.get(active.tabId)), });
+	return ((cache || { }).result = { matches: result.matching.size, index: matching.indexOf(tabs.byId.get(state.tabId)), });
 
 } catch (error) { notify.error('Search failed!', error); return { matches: 0, failed: true, }; } }
-messages.addHandler(doSearch);
+
+
+async function getTerm({
+	windowId = this?.windowId || -1, // eslint-disable-line no-invalid-this
+} = { }) { try {
+	windowId != null && windowId !== -1 || (windowId = (await Windows.getCurrent()).id);
+	debug && console.info('TST Search: getTerm', windowId, this, ...arguments); // eslint-disable-line no-invalid-this
+	return windowStates[windowId]?.term;
+} catch (error) { notify.error('Tab Focus Failed', error); } return null; }
 
 
 async function focusActiveTab({
-	windowId = this?.windowId, // eslint-disable-line no-invalid-this
+	windowId = this?.windowId || -1, // eslint-disable-line no-invalid-this
 } = { }) { try {
-	windowId != null || (windowId = (await Windows.getCurrent()).id);
+	windowId != null && windowId !== -1 || (windowId = (await Windows.getCurrent()).id);
 	debug && console.info('TST Search: focusActiveTab', windowId, this, ...arguments); // eslint-disable-line no-invalid-this
-	const tabId = actives[windowId] && actives[windowId].tabId;
+	const tabId = windowStates[windowId]?.tabId;
 	tabId >= 0 && (await Tabs.update(tabId, { active: true, }));
 	return tabId;
 } catch (error) { notify.error('Tab Focus Failed', error); } return null; }
-messages.addHandler(focusActiveTab);
 
 
-{ // let panel instances know about `options.panel.children.*.value`
+const { getOptions, awaitOptions, } = (() => { // let panel instances know about `options.panel.children.*.value`
 	function getOptions() {
 		return Object.fromEntries(Object.entries(options.panel.children).map(pair => {
 			pair[1] = pair[1].value; return pair;
@@ -227,19 +236,47 @@ messages.addHandler(focusActiveTab);
 		callbacks.forEach(_=>_(opts));
 		callbacks.clear();
 	});
-	messages.addHandlers({ getOptions, awaitOptions() {
+	return { async getOptions() {
+		return getOptions();
+	}, awaitOptions() {
 		return new Promise(resolve => callbacks.add(resolve));
-	}, });
-}
+	}, };
+})();
+
+
+const RPC = { doSearch, getTerm, focusActiveTab, getOptions, awaitOptions, };
+messages.addHandlers(RPC);
+
+
+Commands.onCommand.addListener(async function onCommand(command) { try { {
+	debug && console.info('TST: onCommand', command);
+} switch (command.replace(/_\d$/, '')) {
+	case 'globalFocusKey': {
+		// can't focus sidebar, so open/focus the browserAction popup
+		/**@type{Window}*/ const panel = getViews().find(_=>_.name === 'panel')?.view;
+		/**@type{HTMLInputElement}*/ const input = panel?.document.querySelector('#term');
+		if (input) {
+			if (input.matches(':focus')) {
+				// can't listen to ESC press, so clear on redundant focus command
+				input.value = ''; input.dispatchEvent(new panel.Event('input'));
+			} else {
+				panel.close(); (await BrowserAction.openPopup()); // focus
+			}
+		} else {
+			(await BrowserAction.openPopup());
+		}
+	} break;
+} } catch (error) { notify.error('Command Failed', error); } });
+options.search.children.globalFocusKey.whenChange(values => updateCommand('globalFocusKey', 1, values));
 
 
 Object.assign(global, { // for debugging
 	options,
-	TST, register, unregister,
+	TST, register, unregister, RPC,
 	doSearch, focusActiveTab,
 	Browser: require('node_modules/web-ext-utils/browser/'),
 });
 
-return { TST, register, unregister, };
+return { TST, register, unregister, RPC, };
 
 }); })(this);

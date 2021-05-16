@@ -14,5 +14,6 @@ stages:
           - storage
           - notifications
           - tabs
-      delete:
-        - browser_action
+        commands:
+          globalFocusKey:
+            description: 'Focus the TST Tab Search bar'

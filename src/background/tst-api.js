@@ -43,7 +43,7 @@ function tstAPI({ getManifest, methods = [ ], events = { __proto__: null, }, onE
 		name.replace(/-([a-z])/g, (_, l) => l.toUpperCase()),
 		(options) => {
 			API.debug && console.info(ownName +': sendMessageExternal', TST_ID, { ...options, type: name, });
-			return global.browser.runtime.sendMessage(TST_ID, { ...options, type: name, });
+			return global.browser.runtime.sendMessage(TST_ID, { ...options, type: name, }); // It would be nice if connection errors were distinguishable from errors on TST's side ...
 		},
 	]));
 

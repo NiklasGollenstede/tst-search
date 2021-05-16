@@ -140,6 +140,14 @@ const model = {
 		expanded: true,
 		description: ``,
 		default: true, children: {
+			globalFocusKey: {
+				title: 'Focus Search Bar Hotkey',
+				description: `Browser-wide hotkey to focus the the search bar.<br>
+				NOTE: Firefox currently does not allow extensions to focus (elements in) their sidebars (see <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1502713">Firefox bug 1502713</a>). So for now, this extension instead opens a small panel at the top of the window with a copy of the search bar. Since <code>Esc</code> keypresses are also unavailable while a panel is open, pressing this hotkey clears the search, when pressed while the panel has focus.`,
+				default: 'Ctrl + Shift + F',
+				minLength: 0, maxLength: 1,
+				input: { type: 'command', default: 'Ctrl + Shift + F', },
+			},
 			fieldsPrefix: {
 				title: 'Tab Property Prefixes',
 				description: String.raw`By default ${manifest.name} will look for the search term, according to the flags set, in the tab's title (the text displayed in the tooltip when holding the mouse cursor the tab) and the URL (the web address displayed at the center top of the window when the tab is active). This should do for most users most of the time.<br>
