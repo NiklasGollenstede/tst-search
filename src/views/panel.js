@@ -13,6 +13,6 @@ render(window, {
 	windowId, initialTerm: (await RPC.getTerm(windowId)),
 }).catch(notify.error);
 
-document.querySelector('#term').focus();
+/**@type{HTMLInputElement}*/ const term = document.querySelector('#term'); term.focus();
 
 }); })(this);

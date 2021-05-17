@@ -30,7 +30,9 @@
 	"devDependencies": {
 		"eslintrc": "github:NiklasGollenstede/eslintrc#2b83830",
 		"@typescript-eslint/eslint-plugin": "^4.1.1",
-		"ghooks": "^2.0.4"
+		"ghooks": "^2.0.4",
+		"tsc": "^2.0.3",
+		"typescript": "^4.2.4"
 	},
 	"scripts": {
 		"postinstall": "npm run build",
@@ -38,11 +40,11 @@
 		"build": "web-ext-build release-zip",
 		"watch": "web-ext-build beta-watch",
 		"sign": "web-ext-build beta-sign",
-		"lint": "eslintrc --ignore-path .gitignore --ext=.js,.ts ."
+		"lint": "eslintrc --color --ignore-path .gitignore --ext=.js,.ts . && cd src && tsc -p jsconfig.json"
 	},
 	"config": {
 		"ghooks": {
-			"pre-commit": "npm run lint --silent -- --color"
+			"pre-commit": "npm run lint --silent"
 		},
 		"web-ext-utils": {
 			"srcDir": "src/",

@@ -143,7 +143,7 @@ const model = {
 			globalFocusKey: {
 				title: 'Focus Search Bar Hotkey',
 				description: `Browser-wide hotkey to focus the the search bar.<br>
-				NOTE: Firefox currently does not allow extensions to focus (elements in) their sidebars (see <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1502713">Firefox bug 1502713</a>). So for now, this extension instead opens a small panel at the top of the window with a copy of the search bar. Since <code>Esc</code> keypresses are also unavailable while a panel is open, pressing this hotkey clears the search, when pressed while the panel has focus.`,
+				NOTE: Firefox currently does not allow extensions to focus (elements in) their sidebars (see <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1502713">Firefox bug 1502713</a>). So for now, this extension instead opens a small panel at the top of the window with a copy of the search bar. Since <code>Esc</code> keypresses are also unavailable while a panel is open, pressing this hotkey, when pressed while the panel has focus, clears the search.`,
 				default: 'Ctrl + Shift + F',
 				minLength: 0, maxLength: 1,
 				input: { type: 'command', default: 'Ctrl + Shift + F', },

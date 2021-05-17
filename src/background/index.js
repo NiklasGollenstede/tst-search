@@ -9,19 +9,20 @@
 	tstApi,
 	require,
 }) => {
-let debug; options.debug.whenChange(([ value, ]) => { debug = value; });
+let debug = false; options.debug.whenChange(([ value, ]) => { debug = value; });
 
 
 /// setup of/with TST
 
 const onTstError = console.error.bind(console, 'TST error');
 /**@type{{
-    register: () => Promise<void>;
-    unregister: () => Promise<void>;
-    methods: Record<string, (...args: any[]) => Promise<any>>;
-    debug: boolean;
+	register: () => Promise<void>;
+	unregister: () => Promise<void>;
+	isRegistered: boolean,
+	methods: Record<string, (...args: any[]) => Promise<any>>;
+	debug: boolean;
 }}*/
-const TST_API = tstApi({
+const TST = tstApi({
 	getManifest() { return {
 		name: manifest.name,
 		icons: manifest.icons,
@@ -40,16 +41,19 @@ const TST_API = tstApi({
 		'remove-tab-state', 'add-tab-state',
 	],
 	onError: onTstError, debug,
-}), { register, unregister, methods: TST, } = TST_API;
-Object.defineProperty(TST_API, 'debug', { get() { return debug; }, });
+});
+Object.defineProperty(TST, 'debug', { get() { return debug; }, });
 
 // for the initial registration to work, the very first register() has to happen while TST is already running
-register().catch(() => null); // may very well not be ready yet
-options.result.onAnyChange(() => register().catch(notify.error));
+TST.register().catch(() => null); // may very well not be ready yet
+options.result.onAnyChange(() => TST.register().catch(notify.error));
 
 /**
  * @typedef {object} Tab - Browser Tab (dummy) interface.
  * @property {number} id
+ * @property {number} index
+ * @property {boolean} hidden
+ * @property {boolean} collapsed
  * @property {Tab[]} children
  */
 
@@ -59,13 +63,13 @@ options.result.onAnyChange(() => register().catch(notify.error));
 const classes = {
 	matching: [ 'tst-search:matching', ],
 	hasChild: [ 'tst-search:child-matching', ],
-	/**@type{string[]}*/ hidden: [ ],
+	hidden: /**@type{string[]}*/([ ]),
 	failed: [ 'tst-search:not-matching', ],
 	active: [ 'tst-search:active', ],
 };
-/**@type{{ tabs: Tab[] & { byId: Map<number, Tab>, }, windowId: number, } | null}*/ let cache = null;
-/**@type{() => undefined}*/ const queueClearCache = debounce(() => { cache = null; }, 30e3);
-/**@type{Record<number, { tabId: number, term: string, }>}*/ const windowStates = { __proto__: null, };
+let cache = /**@type{{ tabs: Tab[] & { byId: Map<number, Tab>, }, windowId: number, result?: Await<ReturnType<doSearch>>, } | null}*/(null);
+const queueClearCache = /**@type{() => undefined}*/(debounce(() => { cache = null; }, 30e3));
+const windowStates = /**@type{Record<number, { tabId: number, term: string, }>}*/({ __proto__: null, });
 
 /**
  * Does the actual search on the tabs in a window. Called from the panel via messaging.
@@ -105,9 +109,15 @@ async function doSearch({
 		options.panel.children[name].value = !!value;
 	});
 
+	if (!TST.isRegistered) { try {
+		(await TST.register());
+	} catch (error) {
+		throw new Error('TST is unavailable or does not allow registration');
+	} }
+
 	// clear previous search on empty term
 	if (!term) {
-		TST.removeTabState({ tabs: '*', state: [ ].concat(...Object.values(classes)), }).catch(onTstError);
+		TST.methods.removeTabState({ tabs: '*', state: [ ].concat(...Object.values(classes)), }).catch(onTstError);
 		cache = null; delete windowStates[windowId];
 		return { matches: 0, cleared: true, };
 	} term += '';
@@ -141,7 +151,7 @@ async function doSearch({
 		}
 		const [ nativeTabs, treeItems, ] = await Promise.all([
 			Tabs.query({ windowId, }),
-			TST.getTree({ windowId, }),
+			TST.methods.getTree({ windowId, }),
 		]);
 		const byId = new Map;
 		const mergeTabs = (treeItem, parent) => {
@@ -149,19 +159,19 @@ async function doSearch({
 			const tab = { ...nativeTabs[treeItem.index], ...treeItem, parent, };
 			byId.set(tab.id, tab); return tab;
 		};
-		/**@type{typeof cache.tabs}*/ const tabs = treeItems.map(tab => mergeTabs(tab, -1)); tabs.byId = byId;
+		const tabs = /**@type{typeof cache.tabs}*/(treeItems.map(tab => mergeTabs(tab, -1))); tabs.byId = byId;
 		cache = { windowId, tabs, }; queueClearCache();
 		return tabs;
 	})());
 
 	// find search results
 	const result = {
-		/**@type{Set<Tab>}*/matching: new Set,
-		/**@type{Set<Tab>}*/hasChild: new Set,
-		/**@type{Set<Tab>}*/hidden: new Set,
-		/**@type{Set<Tab>}*/failed: new Set,
+		matching: /**@type{Set<Tab>}*/(new Set),
+		hasChild: /**@type{Set<Tab>}*/(new Set),
+		hidden: /**@type{Set<Tab>}*/(new Set),
+		failed: /**@type{Set<Tab>}*/(new Set),
 	};
-	(function search(tabs) { return tabs.map(tab => {
+	(function search(/**@type{Tab[]}*/tabs) { return tabs.map(tab => {
 		if (tab.collapsed || tab.hidden) { result.hidden.add(tab); return false; }
 		let ret = false; {
 			if (matches(tab)) { result.matching.add(tab); ret = true; }
@@ -171,8 +181,7 @@ async function doSearch({
 
 	// determine active tab
 	const matching = Array.from(result.matching);
-	const state = windowStates[windowId] || (windowStates[windowId] = { tabId: -1, });
-	state.term = term;
+	const state = windowStates[windowId] || (windowStates[windowId] = { tabId: -1, term: '', }); state.term = term;
 	if (matching.length === 0) { state.tabId = -1; }
 	else if (!tabs.byId.get(state.tabId)) { state.tabId = matching[0].id; }
 	else if (!result.matching.has(tabs.byId.get(state.tabId))) {
@@ -187,19 +196,19 @@ async function doSearch({
 
 	// apply tab states
 	(await Promise.all([
-		TST.removeTabState({
+		TST.methods.removeTabState({
 			tabs: Array.from(tabs.byId.keys()), // Explicitly pass the IDs, to ensure consistent runtime with the other calls. The IDs have either just been queried, or wrer the ones that the classes were applied to.
 			state: [ ].concat(...Object.values(classes)),
 		}).catch(onTstError),
 		...Object.keys(result).map(
 			state => classes[state].length && result[state].size
-			&& TST.addTabState({ tabs: Array.from(result[state], _=>_.id), state: classes[state], })
+			&& TST.methods.addTabState({ tabs: Array.from(result[state], _=>_.id), state: classes[state], })
 		),
-		typeof seek === 'boolean' && state.tabId >= 0 && TST.scroll({ tab: state.tabId, }).catch(onTstError), // This throws (if the target tab is collapsed?). Also, collapsed tabs aren't scrolled to (the parent).
-		state.tabId >= 0 && TST.addTabState({ tabs: [ state.tabId, ], state: classes.active, }),
+		typeof seek === 'boolean' && state.tabId >= 0 && TST.methods.scroll({ tab: state.tabId, }).catch(onTstError), // This throws (if the target tab is collapsed?). Also, collapsed tabs aren't scrolled to (the parent).
+		state.tabId >= 0 && TST.methods.addTabState({ tabs: [ state.tabId, ], state: classes.active, }),
 	]));
 
-	return ((cache || { }).result = { matches: result.matching.size, index: matching.indexOf(tabs.byId.get(state.tabId)), });
+	return ((cache || /**@type{any}*/({ })).result = { matches: result.matching.size, index: matching.indexOf(tabs.byId.get(state.tabId)), });
 
 } catch (error) { notify.error('Search failed!', error); return { matches: 0, failed: true, }; } }
 
@@ -253,12 +262,12 @@ Commands.onCommand.addListener(async function onCommand(command) { try { {
 } switch (command.replace(/_\d$/, '')) {
 	case 'globalFocusKey': {
 		// can't focus sidebar, so open/focus the browserAction popup
-		/**@type{Window}*/ const panel = getViews().find(_=>_.name === 'panel')?.view;
-		/**@type{HTMLInputElement}*/ const input = panel?.document.querySelector('#term');
+		const panel = /**@type{Window}*/(getViews().find(_=>_.name === 'panel')?.view);
+		const input = /**@type{HTMLInputElement}*/(panel?.document.querySelector('#term'));
 		if (input) {
 			if (input.matches(':focus')) {
 				// can't listen to ESC press, so clear on redundant focus command
-				input.value = ''; input.dispatchEvent(new panel.Event('input'));
+				input.value = ''; input.dispatchEvent(new /**@type{any}*/(panel).Event('input'));
 			} else {
 				panel.close(); (await BrowserAction.openPopup()); // focus
 			}
@@ -272,11 +281,11 @@ options.search.children.globalFocusKey.whenChange(values => updateCommand('globa
 
 Object.assign(global, { // for debugging
 	options,
-	TST, register, unregister, RPC,
+	TST, RPC,
 	doSearch, focusActiveTab,
 	Browser: require('node_modules/web-ext-utils/browser/'),
 });
 
-return { TST, register, unregister, RPC, };
+return { TST, RPC, };
 
 }); })(this);

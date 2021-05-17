@@ -7,7 +7,7 @@ This is an extension for the browser extension [Tree Style Tabs](https://github.
 Matching tabs will be highlighted in the tree, and/or non-matches will be suppressed (see extension preferences).
 Should the search bar not show up after installing this extension, then have a look at `about:addons` > "Extensions" > "TST Tab Search" > "Preferences".
 
-<img alt="Searching for Cats" src="./resources/screenshot.png" width="440px">
+<img alt="Searching for Cats" src="./resources/screenshot.png" width="264px">
 
 Thats pretty much all there is to say.
 Many thanks to TST's author [piroor](https://github.com/piroor), who has not only developed TST as a great standalone extension, but also designed a very good API for other extensions to interact and integrate with TST. With that, writing the initial version of this extension from scratch took only about two long afternoons.

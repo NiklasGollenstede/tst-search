@@ -6,7 +6,7 @@
 
 const darkPref = global.matchMedia('(prefers-color-scheme: dark)');
 const inputNames = [ 'term', 'matchCase', 'wholeWord', 'regExp', ];
-/**@type{(value: string) => string|boolean}*/function value(input) { return input.type === 'checkbox' ? input.checked : input.value; }
+/**@type{(value: HTMLInputElement) => string|boolean}*/function value(input) { return input.type === 'checkbox' ? input.checked : input.value; }
 
 /**@type{ { [k: string]: (...args: any[]) => Promise<any>, } }*/ const RPC = global.require.cache['background/index']?.exports.RPC || Object.fromEntries([ 'doSearch', 'focusActiveTab', 'getOptions', 'awaitOptions', ].map(name => [ name, (...args) => messages.request(name, ...args), ]));
 
@@ -15,7 +15,7 @@ dom.insertAdjacentHTML('beforeend', form_html); // could parse and put this ina 
 
 /** @param {Window} window */
 async function render(window, {
-	windowId = +(new global.URL(global.location).searchParams.get('tst-windowId') ?? -1),
+	windowId = +(new global.URL(global.location.href).searchParams.get('tst-windowId') ?? -1),
 	destructive = false, initialTerm = '',
 } = { }) { const { document, } = window;
 
@@ -23,7 +23,7 @@ async function render(window, {
 	document.body.append(...(destructive ? dom : dom.cloneNode(true)).childNodes);
 
 	const matchIndex = document.getElementById('matchIndex');
-	const inputs = Object.fromEntries(inputNames.map(name => [ name, document.getElementById(name), ]));
+	const inputs = Object.fromEntries(inputNames.map(name => [ name, /**@type{HTMLInputElement}*/(document.getElementById(name)), ]));
 	initialTerm && (inputs.term.value = initialTerm);
 
 	async function doSearch(options = { }) {
@@ -74,14 +74,12 @@ async function render(window, {
 	applyOptions((await RPC.getOptions()));
 
 	return { doSearch, applyOptions, };
-
-
 }
 
-if (module === global.require.main) {
-	const { applyOptions, } = (await render(global, { destructive: true, }).catch(console.error));
+if (module === global.require.main) { try {
+	const { applyOptions, } = (await render(global.window, { destructive: true, }));
 	while (true) { applyOptions((await RPC.awaitOptions())); } // this is a bit racy
-}
+} catch (error) { console.error(error);	 } }
 return render;
 
 }); })(this);

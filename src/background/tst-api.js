@@ -15,10 +15,11 @@
  * @returns {{
  *     register: () => Promise<void>,
  *     unregister: () => Promise<void>,
+ *     isRegistered: boolean,
  *     methods: Record<string, (params: object) => Promise<any>>,
  *     debug: boolean,
  * }}                        Object of:
- *                            * `register`: Must be called to initially (usually once after the installation) register the current extension with TST, for which TST must already be loaded (which should usually be the case when a user installs an extension to TST, but there should probably be an UI option to repeat the initial registration).
+ *                            * `register`: Must be called to initially (usually once after the installation) to register the current extension with TST, for which TST must already be loaded (which should usually be the case when a user installs an extension to TST, but there should probably be an UI option to repeat the initial registration).
  *                              Depending on the manifest options, the initial registration may trigger user interaction from TST.
  *                              Calling this again while `.getManifest()` returns the same JSON is a noop, sending a different manifest updates the registration (i.e. `.register()` is idempotent).
  *                              Once initially registered, the registration will be automatic whenever TST (re)starts after this extension, but `register()` must be called explicitly if this extension (re)starts after TST. Usually it is best to just call this when the current extension loads, and ignore the return status.
@@ -34,8 +35,12 @@ function tstAPI({ getManifest, methods = [ ], events = { __proto__: null, }, onE
 		const tstManifest = { listeningTypes: [ ...Object.keys(events), 'wait-for-shutdown', ], ...getManifest(), };
 		API.debug && console.info(ownName +': registering with TST ...', tstManifest);
 		(await TST.registerSelf(tstManifest));
+		API.isRegistered = true;
 	}
-	async function unregister() { (await TST.unregisterSelf()); }
+	async function unregister() {
+		(await TST.unregisterSelf());
+		API.isRegistered = false;
+	}
 
 	const TST = Object.fromEntries([
 		'register-self', 'unregister-self', ...methods,
@@ -61,7 +66,7 @@ function tstAPI({ getManifest, methods = [ ], events = { __proto__: null, }, onE
 	} }
 	global.chrome.runtime.onMessageExternal.addListener(onMessageExternal);
 
-	const API = { register, unregister, methods: TST, debug, }; return API;
+	const API = { register, unregister, isRegistered: false, methods: TST, debug, }; return API;
 } return tstAPI;
 
 }; if (typeof define === 'function' /* global define */ && define.amd) { define([ 'exports', ], factory); } else { const exp = { }, result = factory(exp) || exp; global[factory.name] = result; } })(this);

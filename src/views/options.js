@@ -3,7 +3,7 @@
 	'node_modules/web-ext-utils/options/editor/inline': Inline,
 	'node_modules/web-ext-utils/utils/notify': notify,
 	'background/': { register, },
-}) => async (window, location) => { const { document, } = window;
+}) => async (/**@type{Window}*/window, location) => { const { document, } = window;
 
 document.head.insertAdjacentHTML('beforeend', String.raw`<style>
 	/* details in checkbox descriptions */
