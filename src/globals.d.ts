@@ -6,8 +6,10 @@ type Await<T> = T extends {
 } ? U : T;
 
 interface DeclareT {
-	(factory: (modules: Record<string, any>) => any): any;
-	(modules: string[], factory: (...modules: any[]) => any): any;
+	<ExportT>(factory: (modules: Record<string, any>) => Promise<ExportT>|ExportT): { exports: ExportT | { '': never, }, ready: Promise<ExportT>, };
+	<ExportT>(modules: string[], factory: (...modules: any[]) => Promise<ExportT>|ExportT): { exports: ExportT | { '': never, }, ready: Promise<ExportT>, };
 	amd: true;
 }
 declare const define: DeclareT;
+
+declare const browser: any;

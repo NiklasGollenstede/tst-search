@@ -1,22 +1,27 @@
 (function(global) { 'use strict'; define(async ({ // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	'node_modules/web-ext-utils/browser/messages': messages,
+	'module!node_modules/web-ext-utils/browser/messages': messages,
 	'fetch!./form.html': form_html,
 	module,
 }) => {
 
+/**
+ * This script is loaded as the main module in the empty sidebar `subPanel` (see `./embed.html`),
+ * where it executes `render` on the current window, and subscribes to changes of the panel options.
+ * Additionally, it is loaded once in the in the background, where `render` is called (repetitively) from `../views/panel`.
+ */
+
 const darkPref = global.matchMedia('(prefers-color-scheme: dark)');
 const inputNames = [ 'term', 'matchCase', 'wholeWord', 'regExp', ];
-/**@type{(value: HTMLInputElement) => string|boolean}*/function value(input) { return input.type === 'checkbox' ? input.checked : input.value; }
+function value(/**@type{HTMLInputElement}*/input) { return input.type === 'checkbox' ? input.checked : input.value; }
 
-/**@type{ { [k: string]: (...args: any[]) => Promise<any>, } }*/ const RPC = global.require.cache['background/index']?.exports.RPC || Object.fromEntries([ 'doSearch', 'focusActiveTab', 'getOptions', 'awaitOptions', ].map(name => [ name, (...args) => messages.request(name, ...args), ]));
+/**@type{Await<typeof import('../background/index.esm.js').default>['RPC']}*/ const RPC = global.require.cache['module!background/index']?.exports.RPC || Object.fromEntries([ 'doSearch', 'focusActiveTab', 'getOptions', 'awaitOptions', 'getTerm', ].map(name => [ name, (...args) => /**@type{Promise<any>}*/(messages.request(name, ...args)), ]));
 
 const dom = global.document.createElement('div');
-dom.insertAdjacentHTML('beforeend', form_html); // could parse and put this ina document fragment first
+dom.insertAdjacentHTML('beforeend', form_html);
 
 /** @param {Window} window */
 async function render(window, {
-	windowId = +(new global.URL(global.location.href).searchParams.get('tst-windowId') ?? -1),
-	destructive = false, initialTerm = '',
+	windowId = -1, destructive = false, initialTerm = '',
 } = { }) { const { document, } = window;
 
 	document.documentElement.classList.toggle('dark-theme', darkPref.matches);
@@ -30,7 +35,7 @@ async function render(window, {
 		const form = { ...Object.fromEntries(inputNames.map(name => [ name, value(inputs[name]), ])), windowId, ...options, };
 		console.info('TST Search: searching for:', form);
 		const result = (await RPC.doSearch(form));
-		matchIndex.textContent = result.failed ? '??' : result.cleared ? '' : result.index >= 0 ? ((result.index + 1) +' / '+ result.matches) : result.matches || 'none';
+		matchIndex.textContent = result.failed ? '??' : result.cleared ? '' : result.index >= 0 ? ((result.index + 1) +' / '+ result.matches) : (result.matches || 'none') +'';
 		document.documentElement.style.setProperty('--count-width', matchIndex.clientWidth +'px');
 	}
 
@@ -77,7 +82,9 @@ async function render(window, {
 }
 
 if (module === global.require.main) { try {
-	const { applyOptions, } = (await render(global.window, { destructive: true, }));
+	const windowId = +(new global.URL(global.location.href).searchParams.get('tst-windowId') ?? -1); // this requires piroor/treestyletab#2899
+	const initialTerm = windowId === -1 ? '' : (await RPC.getTerm({ windowId, }));
+	const { applyOptions, } = (await render(global.window, { destructive: true, windowId, initialTerm, }));
 	while (true) { applyOptions((await RPC.awaitOptions())); } // this is a bit racy
 } catch (error) { console.error(error);	 } }
 return render;

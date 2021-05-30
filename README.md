@@ -62,7 +62,7 @@ These builds use a different id (`-dev` suffix), so they are installed as a sepa
 
 ##  AMO code review notes
 
-Each [development build](#development-builds) also builds a release ZIP/XPI. For any given SemVer, the one from the tag with the highest build number will be manually uploaded to AMO as the release of that version.
-The instructions for and logs of that tag show exactly how the release version was built.
-Input to the build are source files from this repository, and files installed in `node_modules/` by `npm` as specified in `package.json` and `package-lock.json`.
-Currently, the build process only builds some non-source files, and ZIPs the required files.
+Each [development build](#development-builds) also builds a release ZIP/XPI. For any given SemVer, the one of the tag with the highest build number will be manually uploaded to AMO as the release of that version (i.e., after a release, at least the patch version of any future builds is incremented).
+The instructions for and logs of that tag's build show exactly how the release version was built.
+Input to the build are source files, either from this repository or the extracted XPI, and files installed in `node_modules/` by `npm` as specified in `package.json` and `package-lock.json`.
+Currently, the build process only builds some non-source files, updates the import paths, and ZIPs the required files.

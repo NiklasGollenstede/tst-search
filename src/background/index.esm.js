@@ -1,13 +1,24 @@
-(function(global) { 'use strict'; define(async ({ // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	'node_modules/web-ext-utils/browser/': { manifest, Commands, BrowserAction, Runtime, Tabs, Windows, },
-	'node_modules/web-ext-utils/browser/messages': messages,
+// This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+import tstApi from './tst-api.esm.js';
+import { updateCommand, } from './util.esm.js';
+import Browser from 'web-ext-utils/browser/index.esm.js';
+const { manifest, Commands, BrowserAction, Runtime, Tabs, Windows, } = Browser;
+import messages from 'web-ext-utils/browser/messages.esm.js';
+import notify from 'web-ext-utils/utils/notify.esm.js';
+import options from '../common/options.esm.js';
+
+if (false) { /* `define`ed dependencies, for static tracking as `import` dependencies */ // eslint-disable-line
+	// @ts-ignore
+	import('web-ext-utils/loader/views.js');
+	// @ts-ignore
+	import('es6lib/functional.js');
+}
+
+
+export default (/* await would break module deps tracking */ (function(global) { 'use strict'; return /*!break pbq deps tracking!*/(define)(async ({ // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 	'node_modules/web-ext-utils/loader/views': { getViews, },
-	'node_modules/web-ext-utils/utils/notify': notify,
 	'node_modules/es6lib/functional': { debounce, },
-	'common/options': options,
-	'./util': { updateCommand, },
-	tstApi,
-	require,
 }) => {
 let debug = false; options.debug.whenChange(([ value, ]) => { debug = value; });
 
@@ -15,13 +26,6 @@ let debug = false; options.debug.whenChange(([ value, ]) => { debug = value; });
 /// setup of/with TST
 
 const onTstError = console.error.bind(console, 'TST error');
-/**@type{{
-	register: () => Promise<void>;
-	unregister: () => Promise<void>;
-	isRegistered: boolean,
-	methods: Record<string, (...args: any[]) => Promise<any>>;
-	debug: boolean;
-}}*/
 const TST = tstApi({
 	getManifest() { return {
 		name: manifest.name,
@@ -44,8 +48,8 @@ const TST = tstApi({
 });
 Object.defineProperty(TST, 'debug', { get() { return debug; }, });
 
-// for the initial registration to work, the very first register() has to happen while TST is already running
-TST.register().catch(() => null); // may very well not be ready yet
+TST.register().catch(() => null) // may very well not be ready yet
+.then(() => TST.isRegistered && TST.methods.removeTabState({ tabs: '*', state: [ ].concat(...Object.values(classes)), }).catch(onTstError));
 options.result.onAnyChange(() => TST.register().catch(notify.error));
 
 /**
@@ -89,7 +93,11 @@ const windowStates = /**@type{Record<number, { tabId: number, term: string, }>}*
  *                                              and making it the target of `focusActiveTab`. The active tab's ID is saved per window,
  *                                              and maintained if it still matches the search, otherwise the next matching tab is selected.
  *                                              Then iff `.seek` is `true` the next next, iff `false` the previous matching tab is activated.
- * @returns { Promise<{ matches: number, } & ({ index: number, } | { cleared: true, } | { failed: true, })> } The number of search `matches`, plus either:
+ * @returns { Promise<{ matches: number, } & (
+ *       { index:  number,    cleared?: undefined, failed?: undefined, }
+ *     | { index?: undefined, cleared:  true,      failed?: undefined, }
+ *     | { index?: undefined, cleared?: undefined, failed:  true, }
+ * )> } The number of search `matches`, plus either:
  *                                              * if `term` was empty: `cleared: true`;
  *                                              * on search success: the active tab's index (or `-1`);
  *                                              * or on any failure: `failed: true`.
@@ -254,7 +262,7 @@ const { getOptions, awaitOptions, } = (() => { // let panel instances know about
 
 
 const RPC = { doSearch, getTerm, focusActiveTab, getOptions, awaitOptions, };
-messages.addHandlers(RPC);
+messages.addHandlers('', RPC);
 
 
 Commands.onCommand.addListener(async function onCommand(command) { try { {
@@ -283,9 +291,9 @@ Object.assign(global, { // for debugging
 	options,
 	TST, RPC,
 	doSearch, focusActiveTab,
-	Browser: require('node_modules/web-ext-utils/browser/'),
+	Browser,
 });
 
 return { TST, RPC, };
 
-}); })(this);
+}); })(this || /* global globalThis */ globalThis).ready);

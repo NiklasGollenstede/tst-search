@@ -1,11 +1,17 @@
 
 include: web-ext-utils
 
+pipelines:
+  browsers: [ firefox ]
+
 stages:
   read-fs:
     options:
       ignore: |
         /resources/
+      importMap:
+        imports:
+          'es6lib/': '/node_modules/es6lib/'
 
   build-manifest:
     options:

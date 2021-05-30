@@ -1,4 +1,4 @@
-(function(global) { 'use strict'; const factory = function tstApi(exports) { // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /**
  * Boilerplate code to interact with the *Tree Style Tabs* extension.
@@ -27,9 +27,9 @@
  *                           * `methods`: For every method name passed in, a function that sends a message calling that method. Parameters are those expected my TST, minus the `.type`.
  *                           * `debug`: Updatable copy of the `.debug` parameter.
  */
-function tstAPI({ getManifest, methods = [ ], events = { __proto__: null, }, onError = console.error, debug = false, }) {
+export default function tstAPI({ getManifest, methods = [ ], events = { __proto__: null, }, onError = console.error, debug = false, }) {
 	const TST_ID = 'treestyletab@piro.sakura.ne.jp';
-	const ownName = global.browser.runtime.getManifest().name;
+	const ownName = browser.runtime.getManifest().name;
 
 	async function register() {
 		const tstManifest = { listeningTypes: [ ...Object.keys(events), 'wait-for-shutdown', ], ...getManifest(), };
@@ -48,7 +48,7 @@ function tstAPI({ getManifest, methods = [ ], events = { __proto__: null, }, onE
 		name.replace(/-([a-z])/g, (_, l) => l.toUpperCase()),
 		(options) => {
 			API.debug && console.info(ownName +': sendMessageExternal', TST_ID, { ...options, type: name, });
-			return global.browser.runtime.sendMessage(TST_ID, { ...options, type: name, }); // It would be nice if connection errors were distinguishable from errors on TST's side ...
+			return browser.runtime.sendMessage(TST_ID, { ...options, type: name, }); // It would be nice if connection errors were distinguishable from errors on TST's side ...
 		},
 	]));
 
@@ -58,15 +58,13 @@ function tstAPI({ getManifest, methods = [ ], events = { __proto__: null, }, onE
 	} try { switch (message.type) {
 		case 'ready': register().catch(onError); events.ready && (await events.ready(message)); break;
 		case 'wait-for-shutdown': await new Promise(resolve => {
-			global.addEventListener('beforeunload', () => resolve());
+			window.addEventListener('beforeunload', () => resolve());
 		}); break;
 		default: (await events[message.type](message));
 	} } catch (error) { onError(error); } {
 		return true; // indicate to TST that the event was handled
 	} }
-	global.chrome.runtime.onMessageExternal.addListener(onMessageExternal);
+	browser.runtime.onMessageExternal.addListener(onMessageExternal);
 
 	const API = { register, unregister, isRegistered: false, methods: TST, debug, }; return API;
-} return tstAPI;
-
-}; if (typeof define === 'function' /* global define */ && define.amd) { define([ 'exports', ], factory); } else { const exp = { }, result = factory(exp) || exp; global[factory.name] = result; } })(this);
+}

@@ -1,12 +1,12 @@
-(function(global) { 'use strict'; define(async ({ // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	'node_modules/web-ext-utils/browser/': { manifest, },
-	'node_modules/web-ext-utils/options/': Options,
-	'node_modules/web-ext-utils/browser/storage': { sync: storage, },
-}) => {
+// This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+import Browser from 'web-ext-utils/browser/index.esm.js'; const { manifest, } = Browser;
+import Options from 'web-ext-utils/options/index.esm.js';
+import Storage from 'web-ext-utils/browser/storage.esm.js'; const { sync: storage, } = Storage;
 
 const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 
-const model = {
+/**@type{Record<string, import('web-ext-utils/options/index.esm.js').ModelNode>} */const model = {
 	register: {
 		title: `Register with Tree Style Tabs`,
 		description: `If, when this extension was first installed/enabled, Tree Style Tabs itself wasn't installed/enabled, the search may not be registered with TST.<br>Click the button below to repeat that.`,
@@ -201,7 +201,7 @@ const model = {
 	},
 };
 
-return (await new Options({ model, storage, prefix: 'options', })).children;
+export default new Options({ model, storage, prefix: 'options', }).children;
 
 
 function styles(snippets) { return {
@@ -210,5 +210,3 @@ function styles(snippets) { return {
 		input: { type: 'boolInt', suffix: description, off: '', on: css, },
 	}, ])),
 }; }
-
-}); })(this);

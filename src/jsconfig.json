@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "module": "amd",
     "target": "es2020",
-    "checkJs": true
+    "checkJs": true,
+    "moduleResolution": "node"
   },
   "exclude": [ "node_modules" ]
 }
