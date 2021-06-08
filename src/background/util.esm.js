@@ -22,3 +22,20 @@ export async function updateCommand(name, count, values) {
 		}
 	}
 }
+
+/**
+ * Returns a function which executes its callback a certain time after it itself has been called for the last time (so far).
+ * The arguments and this reference passed to the callback will be those of the most recent call to the wrapper.
+ * @template {any[]} ArgsT
+ * @param  {(...args: ArgsT) => void}  callback  The function to call.
+ * @param  {number}   time      The no-more-calls timeout duration in ms.
+ * @return                      Asynchronous, debounced version of callback.
+ */
+export function debounce(callback, time) {
+	let timer = null;
+	return /**@type{(...args: ArgsT) => ReturnType<typeof setTimeout>}*/(function() {
+		clearTimeout(timer);
+		return (timer = setTimeout(() => callback.apply(this, arguments), time)); // eslint-disable-line no-invalid-this
+	});
+}
+

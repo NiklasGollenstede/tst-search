@@ -22,17 +22,18 @@
 	} ],
 	"dependencies": {
 		"es6lib": "0.0.3",
-		"multiport": "0.3.0",
-		"pbq": "0.6.0",
-		"web-ext-build": "0.2.2",
-		"web-ext-event": "0.2.0",
-		"web-ext-utils": "0.2.0"
+		"multiport": "0.3.1",
+		"pbq": "0.6.1",
+		"web-ext-build": "0.2.3",
+		"web-ext-event": "0.3.0",
+		"web-ext-utils": "0.2.1"
 	},
 	"devDependencies": {
-		"eslintrc": "github:NiklasGollenstede/eslintrc#de4265f",
 		"@typescript-eslint/eslint-plugin": "^4.1.1",
+		"eslintrc": "github:NiklasGollenstede/eslintrc#de4265f",
+		"ghooks": "^2.0.4",
 		"typescript": "^4.2.4",
-		"ghooks": "^2.0.4"
+		"webextension-polyfill-ts": "^0.25.0"
 	},
 	"scripts": {
 		"postinstall": "web-ext-build beta",
@@ -40,7 +41,7 @@
 		"build": "web-ext-build release-zip",
 		"watch": "web-ext-build beta-watch",
 		"sign": "web-ext-build beta-sign",
-		"lint": "eslintrc --color --ignore-path .gitignore"
+		"lint": "eslintrc --color --ignore-path .gitignore ."
 	},
 	"config": {
 		"ghooks": {

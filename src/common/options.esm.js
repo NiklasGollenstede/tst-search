@@ -68,9 +68,9 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 						[ 'bold', true, 'Bold Text', String.raw`
 							.tab:not(.pinned).tst-search\:matching .label { font-weight: bold; }
 						`, ],
-						[ 'red', false, 'Red Text', String.raw`
-							.tab:not(.pinned).tst-search\:matching .label { color: red; }
-						`, ],
+						[ 'fgColor', [ false, '#ff4300', ], [ { type: 'boolean', }, { prefix: 'Text Color', type: 'color', }, ], (active, color) => active ? String.raw`
+							.tab:not(.pinned).tst-search\:matching .label { color: ${globalThis.CSS.escape(color).replace('\\#', '#')}; }
+						` : '', ],
 					]),
 				},
 			},
@@ -79,9 +79,9 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 				description: `The active search result, which can be scrolled through with <code>Enter</code> and <code>Shift</code>+<code>Enter</code>.`,
 				default: true, children: {
 					styles: styles([
-						[ 'red', true, 'Red Text', String.raw`
-							.tab:not(.pinned).tst-search\:active .label { color: red; }
-						`, ],
+						[ 'fgColor', [ true, '#0085ff', ], [ { type: 'boolean', }, { prefix: 'Text Color', type: 'color', }, ], (active, color) => active ? String.raw`
+							.tab:not(.pinned).tst-search\:active .label { color: ${globalThis.CSS.escape(color).replace('\\#', '#')}; }
+						` : '', ],
 						[ 'bold', false, 'Bold Text', String.raw`
 							.tab:not(.pinned).tst-search\:active .label { font-weight: bold; }
 						`, ],
@@ -93,9 +93,9 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 				description: `Any tabs with children that match the search.`,
 				default: true, children: {
 					styles: styles([
-						[ 'red', false, 'Red Text', String.raw`
-							.tab:not(.pinned).tst-search\:child-matching .label { color: red; }
-						`, ],
+						[ 'fgColor', [ false, '#0aff00', ], [ { type: 'boolean', }, { prefix: 'Text Color', type: 'color', }, ], (active, color) => active ? String.raw`
+							.tab:not(.pinned).tst-search\:child-matching .label { color: ${globalThis.CSS.escape(color).replace('\\#', '#')}; }
+						` : '', ],
 						[ 'hide', false, 'Hide Completely', String.raw`
 							.tab.tst-search\:child-matching:not(.tst-search\:matching) { display: none; }
 						`, ],
@@ -107,16 +107,19 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 				description: `Any tab that neither matches not has matching children.`,
 				default: true, children: {
 					styles: styles([
-						[ 'shrink', true, 'Shrink Height', String.raw`
+						[ 'shrink', [ true, 50, ], [ { type: 'boolean', }, { prefix: 'Shrink Height to', type: 'integer', suffix: '%', }, ], (active, shrink) => active ? String.raw`
 							.tab:not(.pinned).collapsed:where(.tst-search\:matching, .tst-search\:child-matches, .tst-search\:not-matching) {
 								margin-top: 0; display: none;
 							}
 							.tab:not(.pinned).tst-search\:not-matching {
 								padding-top: 0; padding-bottom: 1px;
-								margin-bottom: -13.3px;
-								transform: scaleY(50%); transform-origin: top;
+								margin-bottom: calc(-26.6px * ${((100-shrink)/100).toFixed(6)});
+								transform: scaleY(${shrink.toFixed(6)}%); transform-origin: top;
 							}
-						`, ],
+						` : '', [ { }, { from: 25, to: 80, }, ], ],
+						[ 'opacity', [ false, 60, ], [ { type: 'boolean', }, { prefix: 'Reduce Opacity to', type: 'integer', suffix: '%', }, ], (active, opacity) => active ? String.raw`
+							.tab:not(.pinned).tst-search\:not-matching { opacity: ${(opacity/100).toFixed(6)}; }
+						` : '', [ { }, { from: 0, to: 100, }, ], ],
 						[ 'hide', false, 'Hide Completely', String.raw`
 							.tab.tst-search\:not-matching { display: none; }
 						`, ],
@@ -130,7 +133,7 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 				For example: <code>.tab:not(.pinned).tst-search\:active .label { color: red; }</code>				`,
 				expanded: false,
 				default: true, children: { styles: { default: true, children: { raw: {
-					default: '', input: { type: 'code', },
+					default: '', input: { type: 'code', }, extra: { get(/**@type{string}*/code) { return code; }, },
 				}, }, }, },
 			},
 		},
@@ -143,10 +146,24 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 			globalFocusKey: {
 				title: 'Focus Search Bar Hotkey',
 				description: `Browser-wide hotkey to focus the the search bar.<br>
-				NOTE: Firefox currently does not allow extensions to focus (elements in) their sidebars (see <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1502713">Firefox bug 1502713</a>). So for now, this extension instead opens a small panel at the top of the window with a copy of the search bar. Since <code>Esc</code> keypresses are also unavailable while a panel is open, pressing this hotkey, when pressed while the panel has focus, clears the search.`,
+				NOTE: Firefox currently does not allow extensions to focus (elements in) their sidebars (see <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1502713">Firefox bug 1502713</a>). So for now, this extension instead opens a small panel at the top of the window with a copy of the search bar. Since <code>Esc</code> keypresses are also unavailable while a panel is open, pressing this hotkey, while the panel has focus, clears the search. Quickly double pressing the hotkey also clears the search, and leaves the panel closed.`,
 				default: 'Ctrl + Shift + F',
 				minLength: 0, maxLength: 1,
 				input: { type: 'command', default: 'Ctrl + Shift + F', },
+			},
+			clearAfterFocus: {
+				title: 'Clear Search after Switching to Tab',
+				description: `Pressing <code>Ctrl + Enter</code> while the search bar has focus will switch tho the active result (if any).`,
+				default: false,
+				input: { type: 'boolean', suffix: `clear search after switching`, },
+			},
+			searchByTabIds: {
+				title: 'Search by Tab ID',
+				default: [ [ false, false, ], ],
+				input: [
+					{ type: 'boolean', suffix: `searching by tab ID (only), when entering a number (same as searching for <code>id: &lt;number&gt;</code> with "Tab Property Prefixes" active)`, },
+					{ type: 'boolean', prefix: '<br>', suffix: `show tab IDs while searching`, },
+				],
 			},
 			fieldsPrefix: {
 				title: 'Tab Property Prefixes',
@@ -204,9 +221,11 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 export default new Options({ model, storage, prefix: 'options', }).children;
 
 
-function styles(snippets) { return {
-	default: true, children: Object.fromEntries(snippets.map(([ name, active, description, css, ]) => [ name, {
-		default: active ? css : '',
-		input: { type: 'boolInt', suffix: description, off: '', on: css, },
+function styles(/**@type{[ title: string, initial: boolean | any[], description: string | import('web-ext-utils/options/index.esm.js').InputModel[], css: string | ((...value: any[]) => string), restrict?: import('web-ext-utils/options/index.esm.js').RestrictModel[], ][]}*/snippets) { return {
+	default: true, children: Object.fromEntries(snippets.map(([ name, initial, description, css, restrict, ]) => [ name, {
+		default: Array.isArray(initial) ? [ initial, ] : initial,
+		input: Array.isArray(description) ? description : { type: /**@type{'boolean'}*/('boolean'), suffix: description, },
+		extra: typeof css === 'string' ? { value: css, } : { get: css, },
+		restrict,
 	}, ])),
 }; }
