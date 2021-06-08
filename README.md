@@ -1,50 +1,44 @@
 
-# TST Tab Search -- filter Tree Style Tab's sidebar
+# <sub><a href="https://addons.mozilla.org/firefox/addon/tst-search/"><img src="./resources/get-ff-ext.png" width="86" height="30"></a></sub> TST Tab Search -- filter Tree Style Tab's sidebar
 
-<!-- <sub><a href="https://addons.mozilla.org/firefox/addon/tst-search/"><img src="./resources/get-ff-ext.png" width="86" height="30"></a></sub> -->
+<!-- AMO short description:
+Search for or filter the Tabs in TST's sidebar, and quickly find and activate them.
+-->
 
-This is an extension for the browser extension [Tree Style Tabs](https://github.com/piroor/treestyletab#readme) (TST). It adds a search box at the bottom of TST's sidebar, allowing to search the titles and URLs (or whatever) of the tabs in the current window/sidebar, optionally case sensitive, as whole word, or by regular expression.
-Matching tabs will be highlighted in the tree, and/or non-matches will be suppressed (see extension preferences).
-Should the search bar not show up after installing this extension, then have a look at `about:addons` > "Extensions" > "TST Tab Search" > "Preferences".
+<!-- AMO long description: (AMO keeps line breaks, and supports a few HTML tags. Copy from here till the first MarkDown heading, but do remove the image tags.) -->
 
-<img alt="Searching for Cats" src="./resources/screenshot.png" width="264px">
+This is an extension for the browser extension <a href="https://github.com/piroor/treestyletab#readme">Tree Style Tabs</a> (TST). It adds a search box to TST's sidebar, allowing to search the tabs in the current window. With TST Tab Search you can: <ul>
+    <li> start searching with a global search hotkey (Ctrl+Shift+F) </li>
+    <li> customize the filtered tabs and the search panel </li>
+    <li> cycle through results and then switch to the tabs </li>
+    <li> search case sensitive, as whole word, or by regular expression </li>
+    <li> show and search by tab ID </li>
+    <li> search by any tab property </li>
+</ul>
 
-Thats pretty much all there is to say.
-Many thanks to TST's author [piroor](https://github.com/piroor), who has not only developed TST as a great standalone extension, but also designed a very good API for other extensions to interact and integrate with TST. With that, writing the initial version of this extension from scratch took only about two long afternoons.
+<img alt="Tab searches with different settings " src="./resources/screenshot-merged.png" width="600px"> <!-- remove this for AMO -->
 
-<b>Permissions Used</b>:
+There are quite a lot of things that can, but don't need to, be changed in the extensions options. The descriptions of the options also explain how some of the more advanced search features work.
+Should the search bar not show up after installing this extension, then have a look at the top of the options page as well.
+The options can be opened by either going to `about:addons` > "Extensions" > "TST Tab Search" > "Preferences", or right clicking the icon at the top right of the browser > "Manage Extension" > "Preferences". Should the icon not be there, then right click any of the other icons, select "Customize Toolbar" (last entry) and look on that page.
 
-- "Access to browser tabs": Get titles and URLs of tabs to be searched.
-- "Display notifications to you": Notify when something went wrong, or right.
+Many thanks to TST's author <a href="https://github.com/piroor">piroor</a>, who has not only developed TST as a great standalone extension, but also designed a very good API for other extensions to interact and integrate with TST. With that, writing the initial version of this extension from scratch took only about two long afternoons (but refining it took a lot longer)
 
-<!-- NOTE: AMO keeps line breaks within paragraphs ... -->
+<b>Permissions Used</b>: <ul>
+    <li> "Access to browser tabs": Get titles and URLs of tabs to be searched. </li>
+    <li> "Display notifications to you": Notify when something went wrong, or right. </li>
+</ul>
+
+<b>Privacy / Disclaimer</b>: <ul><!--break--></ul>
+This extension doesn't collect any data, nor does it directly or indirectly contact any entity outside the browser, nor does it anything that should be detectable by websites whatsoever.
+This extension only momentarily changes how tabs are displayed in the sidebar, but does no persistent changes to them, and should thus also not be able to cause any (tab) data loss.
 
 
 ## Additional Features
 
-I am happy to receive feedback or contributions on this. This is a (currently short) list of stuff that should be addressed:
+I am happy to receive feedback or contributions on this. This is the list of stuff that should be addressed:
 
-* more/better highlight styles, esp. for pinned tabs (can be tried via "Custom Styles")
-* update the screenshot with active tab and counter (and/or add more screenshots)
-
-
-# TODO
-
-* for/before AMO listing (/the README)
-    * add disclaimer: this is a fairly young extension
-    * state: does not mess with FF tabs, only affects how TST displays them (and is thus pretty safe to use, even in beta)
-    * write the short description / summary
-    * maybe rework the entire listing:
-        * short description
-        * features
-        * more screenshots
-        * clear prompt to review the settings
-    * privacy policy
-        * currently does not send anything
-            * except on dev build the update poll once a day, which isn't analyzed at all, and can be disabled in FF
-            * will never send any tab content, URLs or search terms
-                * *maybe*: It is possible, yet unlikely, that ... . But should there would be a clear notification of any changes in that direction, before they would take effect.
-    * add (badge) link to AMO listing
+* Nothing on the agenda for now. Feel free to [suggest something](https://github.com/NiklasGollenstede/tst-search/issues).
 
 
 ## Development builds -- <sub>[![](https://ci.appveyor.com/api/projects/status/github/NiklasGollenstede/tst-search?svg=true)](https://ci.appveyor.com/project/NiklasGollenstede/tst-search)</sub>
@@ -57,6 +51,7 @@ These builds use a different id (`-dev` suffix), so they are installed as a sepa
  * any options set are managed individually (so pre-release versions can't mess with your settings)
  * they never update to release versions, but
     * they update themselves to the latest development version (once a day, or when clicking `about:addons` > ⚙ > "Check for Updates")
+        * privacy notice this sends an anonymous version request to a private server (which doesn't currently log it)
     * every release version has a corresponding development version (the one with the same prefix and highest build number)
 
 
