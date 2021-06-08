@@ -90,13 +90,13 @@ const queueClearCache = debounce(() => { cache = null; }, 30e3);
 const States = {
 	// note: cleaning up the states is probably not worth it
 	data: /**@type{Record<number, WindowState>}*/({ __proto__: null, }),
-	new() {
+	new(/**@type{number}*/windowId) {
 		const state = /**@type{WindowState}*/({
-			tabId: -1, term: '', result: { term: '', matches: 0, cleared: true, },
+			tabId: -1, term: '', result: { windowId, term: '', matches: 0, cleared: true, },
 		}); state.fireSearched = setEvent(state, 'onSearched');
 		return state;
 	},
-	get(/**@type{number}*/windowId) { return this.data[windowId] || (this.data[windowId] = this.new()); },
+	get(/**@type{number}*/windowId) { return this.data[windowId] || (this.data[windowId] = this.new(windowId)); },
 	set(/**@type{number}*/windowId, /**@type{Partial<Omit<WindowState, 'onSearched'|'fireSearched'>>}*/state) {
 		const base = this.get(windowId); Object.assign(base, state);
 		state.result && base.fireSearched([ base.result, ]); return base;
@@ -104,7 +104,7 @@ const States = {
 };
 
 
-/** @typedef { { term: string, matches: number, } & (
+/** @typedef { { windowId: number, term: string, matches: number, } & (
  *       { index:  number,    cleared?: undefined, failed?: undefined, }
  *     | { index?: undefined, cleared:  true,      failed?: undefined, }
  *     | { index?: undefined, cleared?: undefined, failed:  true, }
@@ -157,7 +157,7 @@ async function doSearch({
 	// clear previous search on empty term
 	if (!term) {
 		TST.methods.removeTabState({ tabs: '*', state: [ ].concat(...Object.values(classes).slice(0, -1/*searching*/)), }).catch(onTstError);
-		return States.set(windowId, { tabId: -1, term: '', result: { term: '', matches: 0, cleared: true, }, }).result;
+		return States.set(windowId, { tabId: -1, term: '', result: { windowId, term: '', matches: 0, cleared: true, }, }).result;
 	} term += '';
 
 	// pick tab properties to search
@@ -248,10 +248,10 @@ async function doSearch({
 		state.tabId >= 0 && TST.methods.addTabState({ tabs: [ state.tabId, ], state: classes.active, }),
 	]));
 
-	const finalResult = { term, matches: result.matching.size, index: matching.indexOf(tabs.byId.get(state.tabId)), };
+	const finalResult = { windowId, term, matches: result.matching.size, index: matching.indexOf(tabs.byId.get(state.tabId)), };
 	States.set(windowId, { result: finalResult, }); return finalResult;
 
-} catch (error) { notify.error('Search failed!', error); return { term: typeof term === 'string' ? term : '', matches: 0, failed: true, }; } }
+} catch (error) { notify.error('Search failed!', error); return { windowId, term: typeof term === 'string' ? term : '', matches: 0, failed: true, }; } }
 
 
 async function startSearch() { options.search.children.searchByTabIds.value[1] &&    TST.methods.addTabState({ tabs: '*', state: classes.searching, }).catch(onTstError); }
@@ -304,7 +304,10 @@ const { getOptions, onOptions, } = (() => { // let panel instances know about `o
 })();
 
 
-const RPC = { doSearch, startSearch, stopSearch, focusActiveTab, getTerm, onSearched, getOptions, onOptions, };
+async function getSingleWindowId() { const windows = (await Windows.getAll()); return windows.length === 1 ? windows[0].id : -1; }
+
+
+const RPC = { doSearch, startSearch, stopSearch, focusActiveTab, getTerm, onSearched, getOptions, onOptions, getSingleWindowId, };
 Runtime.onConnect.addListener(port => { new Port(port, web_ext_Port).addHandlers('', RPC); });
 
 let lastGlobalFocus = 0;

@@ -11,10 +11,11 @@ return dom; })();
 
 /** Renders the interactive search panel into an empty `Window`. */
 export default async function render(/**@type{Window}*/window, {
-	windowId = -1, destructive = false, initialTerm = '', RPC,
+	windowId = -1, destructive = false, initialTerm = '', RPC, onWindowId,
 } = {
 	windowId: -1, destructive: !!false, initialTerm: '',
 	RPC: /**@type{Await<typeof import('../background/index.esm.js').default>['RPC']}*/(null),
+	onWindowId: /**@type{(windowId: number) => void}*/(null),
 }) { const { document, } = window;
 
 	document.documentElement.classList.toggle('dark-theme', darkPref.matches);
@@ -30,6 +31,10 @@ export default async function render(/**@type{Window}*/window, {
 		setResult((await RPC.doSearch(form)));
 	}
 	function setResult(/**@type{import('../background/index.esm.js').SearchResult}*/result) {
+		if (result.windowId != null && result.windowId !== -1) {
+			windowId = result.windowId;
+			if (onWindowId) { onWindowId(result.windowId); onWindowId = null; }
+		}
 		!inputs.term.matches(':focus') && (inputs.term.value = result.term);
 		matchIndex.textContent = result.failed ? '??' : result.cleared ? '' : result.index >= 0 ? ((result.index + 1) +' / '+ result.matches) : (result.matches || 'none') +'';
 		document.documentElement.style.setProperty('--count-width', matchIndex.clientWidth +'px');
