@@ -68,7 +68,7 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 						[ 'bold', true, 'Bold Text', String.raw`
 							.tab:not(.pinned).tst-search\:matching .label { font-weight: bold; }
 						`, ],
-						[ 'fgColor', [ false, '#ff4300', ], [ { type: 'boolean', }, { prefix: 'Text Color', type: 'color', }, ], (active, color) => active ? String.raw`
+						[ 'fgColor', [ false, '#ff4300', ], [ { type: 'boolean', }, { prefix: 'Text Color', type: 'color', }, ], (active, color = '#ff4300') => active ? String.raw`
 							.tab:not(.pinned).tst-search\:matching .label { color: ${globalThis.CSS.escape(color).replace('\\#', '#')}; }
 						` : '', ],
 					]),
@@ -79,7 +79,7 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 				description: `The active search result, which can be scrolled through with <code>Enter</code> and <code>Shift</code>+<code>Enter</code>.`,
 				default: true, children: {
 					styles: styles([
-						[ 'fgColor', [ true, '#0085ff', ], [ { type: 'boolean', }, { prefix: 'Text Color', type: 'color', }, ], (active, color) => active ? String.raw`
+						[ 'fgColor', [ true, '#0085ff', ], [ { type: 'boolean', }, { prefix: 'Text Color', type: 'color', }, ], (active, color = '#0085ff') => active ? String.raw`
 							.tab:not(.pinned).tst-search\:active .label { color: ${globalThis.CSS.escape(color).replace('\\#', '#')}; }
 						` : '', ],
 						[ 'bold', false, 'Bold Text', String.raw`
@@ -93,7 +93,7 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 				description: `Any tabs with children that match the search.`,
 				default: true, children: {
 					styles: styles([
-						[ 'fgColor', [ false, '#0aff00', ], [ { type: 'boolean', }, { prefix: 'Text Color', type: 'color', }, ], (active, color) => active ? String.raw`
+						[ 'fgColor', [ false, '#0aff00', ], [ { type: 'boolean', }, { prefix: 'Text Color', type: 'color', }, ], (active, color = '#0aff00') => active ? String.raw`
 							.tab:not(.pinned).tst-search\:child-matching .label { color: ${globalThis.CSS.escape(color).replace('\\#', '#')}; }
 						` : '', ],
 						[ 'hide', false, 'Hide Completely', String.raw`
@@ -107,7 +107,7 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 				description: `Any tab that neither matches not has matching children.`,
 				default: true, children: {
 					styles: styles([
-						[ 'shrink', [ true, 50, ], [ { type: 'boolean', }, { prefix: 'Shrink Height to', type: 'integer', suffix: '%', }, ], (active, shrink) => active ? String.raw`
+						[ 'shrink', [ true, 50, ], [ { type: 'boolean', }, { prefix: 'Shrink Height to', type: 'integer', suffix: '%', }, ], (active, shrink = 50) => active ? String.raw`
 							.tab:not(.pinned).collapsed:where(.tst-search\:matching, .tst-search\:child-matches, .tst-search\:not-matching) {
 								margin-top: 0; display: none;
 							}
@@ -117,7 +117,7 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 								transform: scaleY(${shrink.toFixed(6)}%); transform-origin: top;
 							}
 						` : '', [ { }, { from: 25, to: 80, }, ], ],
-						[ 'opacity', [ false, 60, ], [ { type: 'boolean', }, { prefix: 'Reduce Opacity to', type: 'integer', suffix: '%', }, ], (active, opacity) => active ? String.raw`
+						[ 'opacity', [ false, 60, ], [ { type: 'boolean', }, { prefix: 'Reduce Opacity to', type: 'integer', suffix: '%', }, ], (active, opacity = 60) => active ? String.raw`
 							.tab:not(.pinned).tst-search\:not-matching { opacity: ${(opacity/100).toFixed(6)}; }
 						` : '', [ { }, { from: 0, to: 100, }, ], ],
 						[ 'hide', false, 'Hide Completely', String.raw`

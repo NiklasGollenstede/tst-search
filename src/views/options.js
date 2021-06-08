@@ -2,7 +2,7 @@
 	'module!node_modules/web-ext-utils/browser/': { manifest, },
 	'node_modules/web-ext-utils/options/editor/inline': Inline,
 	'module!node_modules/web-ext-utils/utils/notify': notify,
-	'module!../background/': { register, },
+	'module!../background/': { TST, },
 }) => async (/**@type{Window}*/window, location) => { const { document, } = window;
 
 document.head.insertAdjacentHTML('beforeend', String.raw`<style>
@@ -20,7 +20,7 @@ document.head.insertAdjacentHTML('beforeend', String.raw`<style>
 
 async function onCommand({ name, }, _buttonId) { try { switch (name) {
 	case 'register': { try {
-		(await register()); notify.info('Registered', `${manifest.name} should now work!`);
+		(await TST.register()); notify.info('Registered', `${manifest.name} should now work!`);
 	} catch (error) {
 		notify.error('TST Registration Failed', `Are you sure Tree Style Tabs is installed and enabled?\nThis extension won't do anything without that.`);
 	} } break;

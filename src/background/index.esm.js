@@ -29,10 +29,10 @@ const TST = tstApi({
 		name: manifest.name,
 		icons: manifest.icons,
 		style: [ 'miss', 'child', 'hit', 'active', 'custom', ].map(
-			name => options.result.children[name].children.styles.children.map(style => {
+			name => options.result.children[name].children.styles.children.map(style => { try {
 				const values = Array.isArray(style.value) ? style.value : [ style.value, ];
 				return typeof style.model.extra.get === 'function' ? style.model.extra.get(...values) : values[0] ? style.model.extra.value : '';
-			}).join('\n')
+			} catch (error) { console.error(error); return ''; } }).join('\n')
 		).join('\n')
 		+'\n'+ options.advanced.children.hideHeader.value
 		+'\n'+ String.raw`.tab.tst-search\:searching:not(.pinned)::after { content: attr(data-tab-id); padding: 0 0 0 .5em; }`,

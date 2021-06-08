@@ -1,6 +1,6 @@
 {
 	"name": "tst-search",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"title": "TST Tab Search",
 	"description": "Filter Tree Style Tab's sidebar by search terms.",
 	"author": "Niklas Gollenstede",
