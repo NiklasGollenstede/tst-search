@@ -161,8 +161,9 @@ async function doSearch({
 	} term += '';
 
 	// pick tab properties to search
-	const fields = fieldsDefault; if (fieldsPrefix) {
-		if (options.search.children.searchByTabIds.value[0] && (/^\s*\d+\s*$/).test(term)) { fields.splice(0, Infinity, 'id'); }
+	const fields = fieldsDefault;
+	if (options.search.children.searchByTabIds.value[0] && (/^\s*\d+\s*$/).test(term)) { fields.splice(0, Infinity, 'id'); }
+	else if (fieldsPrefix) {
 		const match = (/^(\w+(?:[|]\w+)*): ?(.*)/).exec(term);
 		if (match) { fields.splice(0, Infinity, ...match[1].split('|')); term = match[2]; }
 	}

@@ -16,9 +16,9 @@ const port = new Port(Browser.Runtime.connect(), web_ext_Port);
 (async () => {
 	const windowId = +(new globalThis.URL(globalThis.location.href).searchParams.get('windowId') ?? -1);
 
-	const initialTerm = windowId === -1 ? '' : (await RPC.onSearched({ windowId, }, result => setResult(result))).term;
+	const initialTerm = windowId === -1 ? '' : (await RPC.onSearched({ windowId, }, result => { !inputs.term.matches(':focus') && setResult(result); })).term;
 
-	const { setResult, applyOptions, } = (await render(window, { RPC, destructive: true, windowId, initialTerm, }));
+	const { inputs, setResult, applyOptions, } = (await render(window, { RPC, destructive: true, windowId, initialTerm, }));
 
 	applyOptions((await RPC.onOptions(applyOptions)));
 

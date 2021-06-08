@@ -30,6 +30,7 @@ export default async function render(/**@type{Window}*/window, {
 		setResult((await RPC.doSearch(form)));
 	}
 	function setResult(/**@type{import('../background/index.esm.js').SearchResult}*/result) {
+		!inputs.term.matches(':focus') && (inputs.term.value = result.term);
 		matchIndex.textContent = result.failed ? '??' : result.cleared ? '' : result.index >= 0 ? ((result.index + 1) +' / '+ result.matches) : (result.matches || 'none') +'';
 		document.documentElement.style.setProperty('--count-width', matchIndex.clientWidth +'px');
 	}

@@ -16,7 +16,8 @@ This is an extension for the browser extension <a href="https://github.com/piroo
     <li> search by any tab property </li>
 </ul>
 
-<img alt="Tab searches with different settings " src="./resources/screenshot-merged.png" width="600px"> <!-- remove this for AMO -->
+<img alt="Tab searches with different settings" src="./resources/screenshot-merged.png" width="600px"> <!-- remove this for AMO -->
+<!-- Left to right: global search hotkey, customized filters, and search by tab ID. -->
 
 There are quite a lot of things that can, but don't need to, be changed in the extensions options. The descriptions of the options also explain how some of the more advanced search features work.
 Should the search bar not show up after installing this extension, then have a look at the top of the options page as well.
@@ -32,6 +33,27 @@ Many thanks to TST's author <a href="https://github.com/piroor">piroor</a>, who 
 <b>Privacy / Disclaimer</b>: <ul><!--break--></ul>
 This extension doesn't collect any data, nor does it directly or indirectly contact any entity outside the browser, nor does it anything that should be detectable by websites whatsoever.
 This extension only momentarily changes how tabs are displayed in the sidebar, but does no persistent changes to them, and should thus also not be able to cause any (tab) data loss.
+
+
+## Screenshots
+
+![](./resources/screenshot-default.png)
+Default view of search results in Firefox 89 (other screenshots have customized options).
+
+![](./resources/screenshot-visuals.png)
+Highlighting search results in bold orange, the currently selected result in bold blue, and parents of search results in green.
+All other tabs are shrunk and dimmed.
+Pressing Ctrl+Enter will switch to the blue tab.
+
+![](./resources/screenshot-global.png)
+The global hotkey allows searching (and then switching to) tabs without moving the cursor. For technical reasons, the search panel has to open in the little popup at the top.
+
+![](./resources/screenshot-by-id.png)
+There is an option to display the tab IDs while the search panel is focused, to the quickly switch to tabs by id.
+
+![](./resources/screenshot-modes.png)
+Additional search modes: case sensitive, as whole word, or by regular expression.
+By default tab titles and URLs are searched, but there is an option to search all other (tree style) tab properties as well.
 
 
 ## Additional Features
