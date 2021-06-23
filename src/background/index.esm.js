@@ -13,11 +13,8 @@ if (false) { /* `define`ed dependencies, for static tracking as `import` depende
 	// @ts-ignore
 	import('web-ext-utils/loader/views.js');
 }
+const ViewsP = globalThis.require.async('node_modules/web-ext-utils/loader/views');
 
-
-export default (/* await would break module deps tracking */ (function(global) { 'use strict'; return /*!break pbq deps tracking!*/(define)(async ({
-	'node_modules/web-ext-utils/loader/views': { getViews, },
-}) => {
 let debug = false; options.debug.whenChange(([ value, ]) => { debug = value; });
 
 
@@ -59,6 +56,7 @@ options.result.onAnyChange(() => TST.register().catch(notify.error));
  * @typedef {object} Tab - Browser Tab (dummy) interface.
  * @property {number} id
  * @property {number} index
+ * @property {boolean} active
  * @property {boolean} hidden
  * @property {boolean} collapsed
  * @property {Tab[]} children
@@ -80,7 +78,6 @@ const queueClearCache = debounce(() => { cache = null; }, 30e3);
 
 /** @typedef {{
     tabId: number;
-    term: string;
     result: SearchResult;
     onSearched: Events.Event<[SearchResult]>;
     fireSearched: Events.EventTrigger<[SearchResult]>;
@@ -92,7 +89,7 @@ const States = {
 	data: /**@type{Record<number, WindowState>}*/({ __proto__: null, }),
 	new(/**@type{number}*/windowId) {
 		const state = /**@type{WindowState}*/({
-			tabId: -1, term: '', result: { windowId, term: '', matches: 0, cleared: true, },
+			tabId: -1, result: { windowId, inputTerm: '', matches: 0, cleared: true, }, onSearched: null, fireSearched: null,
 		}); state.fireSearched = setEvent(state, 'onSearched');
 		return state;
 	},
@@ -104,7 +101,7 @@ const States = {
 };
 
 
-/** @typedef { { windowId: number, term: string, matches: number, } & (
+/** @typedef { { windowId: number, inputTerm: string, matches: number, } & (
  *       { index:  number,    cleared?: undefined, failed?: undefined, }
  *     | { index?: undefined, cleared:  true,      failed?: undefined, }
  *     | { index?: undefined, cleared?: undefined, failed:  true, }
@@ -157,8 +154,12 @@ async function doSearch({
 	// clear previous search on empty term
 	if (!term) {
 		TST.methods.removeTabState({ tabs: '*', state: [ ].concat(...Object.values(classes).slice(0, -1/*searching*/)), }).catch(onTstError);
-		return States.set(windowId, { tabId: -1, term: '', result: { windowId, term: '', matches: 0, cleared: true, }, }).result;
-	} term += '';
+		return States.set(windowId, { tabId: -1, result: { windowId, inputTerm: '', matches: 0, cleared: true, }, }).result;
+	} term += ''; const inputTerm = term;
+
+	if (term.length > 150) {
+		throw new Error(`Search term is ${term.length} letters. This is likely a mistake, please shorten to 150 letters.`);
+	}
 
 	// pick tab properties to search
 	const fields = fieldsDefault;
@@ -175,11 +176,11 @@ async function doSearch({
 		matches = tab => fields.some(key => exp.test(toString(tab[key])));
 	} catch (error) {
 		// on failing regexp while typing, return previous result
-		if (cached && cache && States.get(windowId).result.term) { notify.warn('Invalid RegExp', error); return States.get(windowId).result; } throw error;
+		if (cached && cache && States.get(windowId).result.inputTerm) { notify.warn('Invalid RegExp', error); return States.get(windowId).result; } throw error;
 	} } else {
 		const _map = matchCase ? _=>_ :_=>_.toLowerCase();
-		const map = wholeWord ? _=> ' '+_map(_)+' ' :_=>_map(_);
-		term = map(term);
+		const map = wholeWord ? _=> ' '+_map(_)+' ' :_=>_map(_); // TODO: spaces are not the only word boundaries ...
+		term = map(term.trim());
 		matches = tab => fields.some(key => map(toString(tab[key])).includes(term));
 	}
 	function toString(/**@type{unknown}*/prop) { return prop == null ? '' : typeof prop === 'string' ? prop : JSON.stringify(prop); }
@@ -221,7 +222,7 @@ async function doSearch({
 
 	// determine active tab
 	const matching = Array.from(result.matching);
-	const state = States.get(windowId); state.term = term;
+	const state = States.get(windowId);
 	if (matching.length === 0) { state.tabId = -1; }
 	else if (!tabs.byId.get(state.tabId)) { state.tabId = matching[0].id; }
 	else if (!result.matching.has(tabs.byId.get(state.tabId))) {
@@ -237,21 +238,22 @@ async function doSearch({
 	// apply tab states
 	(await Promise.all([
 		TST.methods.removeTabState({
-			tabs: Array.from(tabs.byId.keys()), // Explicitly pass the IDs, to ensure consistent runtime with the other calls. The IDs have either just been queried, or wrer the ones that the classes were applied to.
+			tabs: Array.from(tabs.byId.keys()), // Explicitly pass the IDs, to ensure consistent runtime with the other calls. The IDs have either just been queried, or are the ones that the classes were applied to last time.
 			state: [ ].concat(...Object.values(classes).slice(0, -1/*searching*/)),
 		}).catch(onTstError),
 		...Object.keys(result).map(
 			state => classes[state].length && result[state].size
 			&& TST.methods.addTabState({ tabs: Array.from(result[state], _=>_.id), state: classes[state], })
 		),
-		typeof seek === 'boolean' && state.tabId >= 0 && TST.methods.scroll({ tab: state.tabId, }).catch(onTstError), // This throws (if the target tab is collapsed?). Also, collapsed tabs aren't scrolled to (the parent).
+		options.search.children.scrollActiveTab.value ? TST.methods.scrollTo({ tab: state.tabId >= 0 ? state.tabId : tabs.find(_=>_.active).id, }).catch(onTstError)
+		: typeof seek === 'boolean' && state.tabId >= 0 && TST.methods.scroll({ tab: state.tabId, }).catch(onTstError), // This throws (if the target tab is collapsed?). Also, collapsed tabs aren't scrolled to (the parent).
 		state.tabId >= 0 && TST.methods.addTabState({ tabs: [ state.tabId, ], state: classes.active, }),
 	]));
 
-	const finalResult = { windowId, term, matches: result.matching.size, index: matching.indexOf(tabs.byId.get(state.tabId)), };
+	const finalResult = { windowId, inputTerm, matches: result.matching.size, index: matching.indexOf(tabs.byId.get(state.tabId)), };
 	States.set(windowId, { result: finalResult, }); return finalResult;
 
-} catch (error) { notify.error('Search failed!', error); return { windowId, term: typeof term === 'string' ? term : '', matches: 0, failed: true, }; } }
+} catch (error) { notify.error('Search failed!', error); return { windowId, inputTerm: '', matches: 0, failed: true, }; } }
 
 
 async function startSearch() { options.search.children.searchByTabIds.value[1] &&    TST.methods.addTabState({ tabs: '*', state: classes.searching, }).catch(onTstError); }
@@ -265,7 +267,7 @@ async function focusActiveTab({
 	debug && console.info('TST Search: focusActiveTab', windowId, this, ...arguments); // eslint-disable-line no-invalid-this
 	const tabId = States.get(windowId).tabId; if (tabId >= 0) {
 		(await Tabs.update(tabId, { active: true, }));
-		getViews().find(_=>_.name === 'panel')?.view?.close();
+		(await ViewsP).getViews().find(_=>_.name === 'panel')?.view?.close();
 		options.search.children.clearAfterFocus.value && (await doSearch({ windowId, term: '', }));
 	} return tabId;
 } catch (error) { notify.error('Tab Focus Failed', error); } return null; }
@@ -276,7 +278,7 @@ async function getTerm({
 } = { }) { try {
 	windowId != null && windowId !== -1 || (windowId = (await Windows.getCurrent()).id);
 	debug && console.info('TST Search: getTerm', windowId, this, ...arguments); // eslint-disable-line no-invalid-this
-	return States.get(windowId).term || '';
+	return States.get(windowId).result.inputTerm || '';
 } catch (error) { notify.error('Tab Focus Failed', error); } return null; }
 
 async function onSearched({
@@ -316,7 +318,7 @@ Commands.onCommand.addListener(async function onCommand(command) { try { {
 } switch (command.replace(/_\d$/, '')) {
 	case 'globalFocusKey': {
 		// can't focus sidebar, so open/focus the browserAction popup
-		const panel = /**@type{Window}*/(getViews().find(_=>_.name === 'panel')?.view);
+		const panel = /**@type{Window}*/((await ViewsP).getViews().find(_=>_.name === 'panel')?.view);
 		const input = /**@type{HTMLInputElement}*/(panel?.document.querySelector('#term'));
 		const prev = lastGlobalFocus; lastGlobalFocus = Date.now();
 		if (lastGlobalFocus - prev < 300) { // double tap
@@ -336,7 +338,7 @@ Commands.onCommand.addListener(async function onCommand(command) { try { {
 options.search.children.globalFocusKey.whenChange(values => updateCommand('globalFocusKey', 1, values));
 
 
-Object.assign(global, { // for debugging
+Object.assign(globalThis, { // for debugging
 	options,
 	classes, cache, States,
 	TST, RPC,
@@ -344,6 +346,4 @@ Object.assign(global, { // for debugging
 	Browser,
 });
 
-return { TST, RPC, };
-
-}); })(this || /* global globalThis */ globalThis).ready);
+export default { TST, RPC, };

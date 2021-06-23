@@ -35,7 +35,7 @@ export default async function render(/**@type{Window}*/window, {
 			windowId = result.windowId;
 			if (onWindowId) { onWindowId(result.windowId); onWindowId = null; }
 		}
-		!inputs.term.matches(':focus') && (inputs.term.value = result.term);
+		!inputs.term.matches(':focus') && (inputs.term.value = result.inputTerm);
 		matchIndex.textContent = result.failed ? '??' : result.cleared ? '' : result.index >= 0 ? ((result.index + 1) +' / '+ result.matches) : (result.matches || 'none') +'';
 		document.documentElement.style.setProperty('--count-width', matchIndex.clientWidth +'px');
 	}

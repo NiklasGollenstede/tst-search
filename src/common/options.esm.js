@@ -146,23 +146,29 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 			globalFocusKey: {
 				title: 'Focus Search Bar Hotkey',
 				description: `Browser-wide hotkey to focus the the search bar.<br>
-				NOTE: Firefox currently does not allow extensions to focus (elements in) their sidebars (see <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1502713">Firefox bug 1502713</a>). So for now, this extension instead opens a small panel at the top of the window with a copy of the search bar. Since <code>Esc</code> keypresses are also unavailable while a panel is open, pressing this hotkey, while the panel has focus, clears the search. Quickly double pressing the hotkey also clears the search, and leaves the panel closed.`,
+				NOTE: Firefox currently does not allow extensions to focus (elements in) their sidebars (see <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1502713">Firefox bug 1502713</a>). So for now, this extension instead opens a small panel at the top of the window with a copy of the search bar. For this to work, the extension's icon <br>has to be in the browser navigation bar</b>.<br>
+				Since <code>Esc</code> keypresses are also unavailable while a panel is open, pressing this hotkey again, while the panel has focus, clears the search. Quickly double pressing the hotkey at any time also clears the search, and closes the panel.`,
 				default: 'Ctrl + Shift + F',
 				minLength: 0, maxLength: 1,
 				input: { type: 'command', default: 'Ctrl + Shift + F', },
 			},
 			clearAfterFocus: {
 				title: 'Clear Search after Switching to Tab',
-				description: `Pressing <code>Ctrl + Enter</code> while the search bar has focus will switch tho the active result (if any).`,
+				description: `Pressing <code>Ctrl</code>+<code>Enter</code> while the search bar has focus will switch tho the active result (if any).`,
 				default: false,
-				input: { type: 'boolean', suffix: `clear search after switching`, },
+				input: { type: 'boolean', suffix: `Clear search after switching`, },
+			},
+			scrollActiveTab: {
+				title: 'Scroll to Active Tab',
+				default: false,
+				input: { type: 'boolean', suffix: `While searching, keep scrolling to the active search result, if any, or otherwise the currently focused tab.`, },
 			},
 			searchByTabIds: {
 				title: 'Search by Tab ID',
 				default: [ [ false, false, ], ],
 				input: [
-					{ type: 'boolean', suffix: `searching by tab ID (only), when entering a number (same as searching for <code>id: &lt;number&gt;</code> with "Tab Property Prefixes" active)`, },
-					{ type: 'boolean', prefix: '<br>', suffix: `show tab IDs while searching`, },
+					{ type: 'boolean', suffix: `When entering a number, search by tab ID (only). (Same as searching for <code>id: &lt;number&gt;</code> with "Tab Property Prefixes" active)`, },
+					{ type: 'boolean', prefix: '<br>', suffix: `Show tab IDs while searching`, },
 				],
 			},
 			fieldsPrefix: {
