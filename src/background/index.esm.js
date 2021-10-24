@@ -199,8 +199,8 @@ async function doSearch({
 	} } else {
 		const _map = matchCase ? _=>_ :_=>_.toLowerCase();
 		const map = wholeWord ? _=> ' '+_map(_)+' ' :_=>_map(_); // TODO: spaces are not the only word boundaries ...
-		term = map(term.trim());
-		matches = tab => fields.some(key => map(toString(tab[key])).includes(term));
+		const terms = options.search.children.matchKeywords.value ? term.trim().split(/[ ]+/).map(map) : [ map(term.trim()), ];
+		matches = tab => fields.some(key => { const value = map(toString(tab[key])); return terms.every(term => value.includes(term)); });
 	}
 	function toString(/**@type{unknown}*/prop) { return prop == null ? '' : typeof prop === 'string' ? prop : JSON.stringify(prop); }
 

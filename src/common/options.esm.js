@@ -168,6 +168,11 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 				default: false,
 				input: { type: 'boolean', suffix: `Clear search after switching`, },
 			},
+			matchKeywords: {
+				title: 'Keyword Matching',
+				default: true,
+				input: { type: 'boolean', suffix: `When doing a non-RegExp search, each (space separated) word can (but also has to) match independently in any order (as opposed to a full text search).`, },
+			},
 			searchByTabIds: {
 				title: 'Search by Tab ID',
 				default: [ [ false, false, ], ],
