@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * this changelog
 
 ### Changed
+* fix highlighting, esp. with TST's "sidebar" theme
 
 
 ## v[0.0.3] - 2021-06-08

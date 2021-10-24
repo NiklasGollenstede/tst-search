@@ -66,10 +66,10 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 				default: true, children: {
 					styles: styles([
 						[ 'bold', true, 'Bold Text', String.raw`
-							.tab:not(.pinned).tst-search\:matching .label { font-weight: bold; }
+							.tab:not(.pinned).tst-search\:matching :is(.label, .label-content) { font-weight: bold; }
 						`, ],
 						[ 'fgColor', [ false, '#ff4300', ], [ { type: 'boolean', }, { prefix: 'Text Color', type: 'color', }, ], (active, color = '#ff4300') => active ? String.raw`
-							.tab:not(.pinned).tst-search\:matching .label { color: ${globalThis.CSS.escape(color).replace('\\#', '#')}; }
+							.tab:not(.pinned).tst-search\:matching :is(.label, .label-content) { color: ${globalThis.CSS.escape(color).replace('\\#', '#')}; }
 						` : '', ],
 					]),
 				},
@@ -80,10 +80,10 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 				default: true, children: {
 					styles: styles([
 						[ 'fgColor', [ true, '#0085ff', ], [ { type: 'boolean', }, { prefix: 'Text Color', type: 'color', }, ], (active, color = '#0085ff') => active ? String.raw`
-							.tab:not(.pinned).tst-search\:active .label { color: ${globalThis.CSS.escape(color).replace('\\#', '#')}; }
+							.tab:not(.pinned).tst-search\:active :is(.label, .label-content) { color: ${globalThis.CSS.escape(color).replace('\\#', '#')}; }
 						` : '', ],
 						[ 'bold', false, 'Bold Text', String.raw`
-							.tab:not(.pinned).tst-search\:active .label { font-weight: bold; }
+							.tab:not(.pinned).tst-search\:active :is(.label, .label-content) { font-weight: bold; }
 						`, ],
 					]),
 				},
@@ -94,7 +94,7 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 				default: true, children: {
 					styles: styles([
 						[ 'fgColor', [ false, '#0aff00', ], [ { type: 'boolean', }, { prefix: 'Text Color', type: 'color', }, ], (active, color = '#0aff00') => active ? String.raw`
-							.tab:not(.pinned).tst-search\:child-matching .label { color: ${globalThis.CSS.escape(color).replace('\\#', '#')}; }
+							.tab:not(.pinned).tst-search\:child-matching :is(.label, .label-content) { color: ${globalThis.CSS.escape(color).replace('\\#', '#')}; }
 						` : '', ],
 						[ 'hide', false, 'Hide Completely', String.raw`
 							.tab.tst-search\:child-matching:not(.tst-search\:matching) { display: none; }
@@ -130,7 +130,7 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 				title: 'Custom Styles',
 				description: String.raw`Custom CSS to apply to the TST sidebar.<br>
 				${manifest.name} sets the CSS classes <code>tst-search:matching</code>, <code>tst-search:active</code>, <code>tst-search:child-matching</code>, and <code>tst-search:not-matching</code> on tabs in the four result categories above, respectively.<br>
-				For example: <code>.tab:not(.pinned).tst-search\:active .label { color: red; }</code>				`,
+				For example: <code>.tab:not(.pinned).tst-search\:active :is(.label, .label-content) { color: red; }</code>`,
 				expanded: false,
 				default: true, children: { styles: { default: true, children: { raw: {
 					default: '', input: { type: 'code', }, extra: { get(/**@type{string}*/code) { return code; }, },
