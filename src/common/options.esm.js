@@ -152,16 +152,21 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 				minLength: 0, maxLength: 1,
 				input: { type: 'command', default: 'Ctrl + Shift + F', },
 			},
+			scrollActiveTab: {
+				title: 'Scroll to Active Tab',
+				default: false,
+				input: { type: 'boolean', suffix: `While searching, keep scrolling to the active search result, if any, or otherwise the currently focused tab.`, },
+			},
+			revealOnFocus: {
+				title: 'Reveal Active Tab',
+				default: true,
+				input: { type: 'boolean', suffix: `While searching or cycling through the results, un-collapse all parents of the active search result.`, },
+			},
 			clearAfterFocus: {
 				title: 'Clear Search after Switching to Tab',
 				description: `Pressing <code>Ctrl</code>+<code>Enter</code> while the search bar has focus will switch tho the active result (if any).`,
 				default: false,
 				input: { type: 'boolean', suffix: `Clear search after switching`, },
-			},
-			scrollActiveTab: {
-				title: 'Scroll to Active Tab',
-				default: false,
-				input: { type: 'boolean', suffix: `While searching, keep scrolling to the active search result, if any, or otherwise the currently focused tab.`, },
 			},
 			searchByTabIds: {
 				title: 'Search by Tab ID',

@@ -57,6 +57,7 @@ const TST = tstApi({
 		'get-tree',
 		'scroll',
 		'remove-tab-state', 'add-tab-state',
+		'expand-tree',
 	],
 	onError: onTstError, debug,
 });
@@ -72,8 +73,12 @@ options.result.onAnyChange(() => TST.register().catch(notify.error));
  * @property {number} index
  * @property {boolean} active
  * @property {boolean} hidden
- * @property {boolean} collapsed
+ *
  * @property {Tab[]} children
+ * @property {number} parent
+ * @property {number} indent
+ * @property {number[]} ancestorTabIds
+ * @property {('collapsed'|'subtree-collapsed'|'locked-collapsed'|'group-tab')[]} states
  */
 
 
@@ -87,7 +92,7 @@ const classes = {
 	active: [ 'tst-search:active', ],
 	searching: [ 'tst-search:searching', ],
 };
-let cache = /**@type{{ tabs: Tab[] & { byId: Map<number, Tab>, }, windowId: number, } | null}*/(null);
+let cache = /**@type{{ tabs: Tab[] & { byId: Map<number, Tab>, all: Tab[], }, windowId: number, } | null}*/(null);
 const queueClearCache = debounce(() => { cache = null; }, 30e3);
 
 /** @typedef {{
@@ -208,13 +213,13 @@ async function doSearch({
 			Tabs.query({ windowId, }),
 			TST.methods.getTree({ windowId, }),
 		]);
-		const byId = new Map;
+		const byId = new Map; const all = /**@type{Tab[]}*/([ ]);
 		const mergeTabs = (treeItem, parent) => {
 			treeItem.children = treeItem.children.map(tab => mergeTabs(tab, treeItem.id));
 			const tab = { ...nativeTabs[treeItem.index], ...treeItem, parent, };
-			byId.set(tab.id, tab); return tab;
+			byId.set(tab.id, tab); all.push(tab); return tab;
 		};
-		const tabs = /**@type{typeof cache.tabs}*/(treeItems.map(tab => mergeTabs(tab, -1))); tabs.byId = byId;
+		const tabs = /**@type{typeof cache.tabs}*/(treeItems.map(tab => mergeTabs(tab, -1))); tabs.byId = byId; tabs.all = all;
 		cache = { windowId, tabs, }; queueClearCache();
 		return tabs;
 	})());
@@ -227,7 +232,7 @@ async function doSearch({
 		failed: /**@type{Set<Tab>}*/(new Set),
 	};
 	(function search(/**@type{Tab[]}*/tabs) { return tabs.map(tab => {
-		if (tab.collapsed || tab.hidden) { result.hidden.add(tab); return false; }
+		if (tab.hidden) { result.hidden.add(tab); return false; }
 		let ret = false; {
 			if (matches(tab)) { result.matching.add(tab); ret = true; }
 			if (search(tab.children)) { result.hasChild.add(tab); ret = true; }
@@ -238,29 +243,41 @@ async function doSearch({
 	const matching = Array.from(result.matching);
 	const state = States.get(windowId);
 	if (matching.length === 0) { state.tabId = -1; }
-	else if (!tabs.byId.get(state.tabId)) { state.tabId = matching[0].id; }
-	else if (!result.matching.has(tabs.byId.get(state.tabId))) {
+	else if (!tabs.byId.get(state.tabId)) { state.tabId = matching[0].id; } // prev. active tab is gone
+	else if (!result.matching.has(tabs.byId.get(state.tabId))) { // prev. active tab is no longer a valid result
 		const prev = tabs.byId.get(state.tabId);
 		state.tabId = (matching.find(tab => tab.index > prev.index) || matching[0]).id;
-	}
+	} // keep pre. active tab
 	if (typeof seek === 'boolean') { if (matching.length > 1) {
 		const current = matching.indexOf(tabs.byId.get(state.tabId));
 		if (seek) { state.tabId = matching[current + 1 < matching.length ? current + 1 : 0].id; }
 		else      { state.tabId = matching[current - 1 >= 0              ? current - 1 : matching.length - 1].id; }
 	} }
+	const active = tabs.byId.get(state.tabId);
+//	const parents = (/**@return{Tab[]}*/function collect(self) {
+//		const parent = tabs.byId.get(self.id); return parent ? [ ...collect(parent), self, ] : [ self, ];
+//	})(active);
+
+	const collapsed = !active || !options.search.children.revealOnFocus.value || !active.states.includes('collapsed') ? [ ]
+	: active.ancestorTabIds.map(id => tabs.byId.get(id)).filter(tab => tab.states.includes('subtree-collapsed'));
+
+	const scrollTo = !active
+	? options.search.children.scrollActiveTab.value ? tabs.all.find(_=>_.active).id : -1
+	: typeof seek === 'boolean' || options.search.children.scrollActiveTab.value
+	? options.search.children.revealOnFocus.value || !active.states.includes('collapsed') ? active.id
+	: active.ancestorTabIds.find(id => !tabs.byId.get(id).states.includes('collapsed'))
+	: -1;
 
 	// apply tab states
 	(await Promise.all([
-		TST.methods.removeTabState({
-			tabs: Array.from(tabs.byId.keys()), // Explicitly pass the IDs, to ensure consistent runtime with the other calls. The IDs have either just been queried, or are the ones that the classes were applied to last time.
-			state: [ ].concat(...Object.values(classes).slice(0, -1/*searching*/)),
-		}).catch(onTstError),
-		...Object.keys(result).map(
-			state => classes[state].length && result[state].size
-			&& TST.methods.addTabState({ tabs: Array.from(result[state], _=>_.id), state: classes[state], })
-		),
-		options.search.children.scrollActiveTab.value ? TST.methods.scrollTo({ tab: state.tabId >= 0 ? state.tabId : tabs.find(_=>_.active).id, }).catch(onTstError)
-		: typeof seek === 'boolean' && state.tabId >= 0 && TST.methods.scroll({ tab: state.tabId, }).catch(onTstError), // This throws (if the target tab is collapsed?). Also, collapsed tabs aren't scrolled to (the parent).
+		...Object.keys(classes).map(state => !classes[state].length ? [ ] : [
+			TST.methods.removeTabState({ tabs: (!result[state]?.size ? tabs.all : tabs.all.filter(tab => !result[state].has(tab))).map(_=>_.id), state: classes[state], }),
+			result[state]?.size && TST.methods.addTabState({ tabs: Array.from(result[state], _=>_.id), state: classes[state], }),
+		]).flat(1),
+		(async () => {
+			collapsed.length && (await Promise.all(collapsed.map(tab => TST.methods.expandTree({ tab: tab.id, }))));
+			scrollTo >= 0 && (await TST.methods.scroll({ tab: scrollTo, }));
+		})().catch(onTstError),
 		state.tabId >= 0 && TST.methods.addTabState({ tabs: [ state.tabId, ], state: classes.active, }),
 	]));
 
