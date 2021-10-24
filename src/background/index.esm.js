@@ -13,7 +13,8 @@ if (false) { /* `define`ed dependencies, for static tracking as `import` depende
 	// @ts-ignore
 	import('web-ext-utils/loader/views.js');
 }
-const ViewsP = globalThis.require.async('node_modules/web-ext-utils/loader/views');
+// Can't be proted to ESM yet: https://github.com/mozilla/addons-linter/issues/3741
+let Views; globalThis.require.async('node_modules/web-ext-utils/loader/views').then(exp => (Views = exp));
 
 let debug = false; options.debug.whenChange(([ value, ]) => { debug = value; });
 
@@ -32,7 +33,20 @@ const TST = tstApi({
 			} catch (error) { console.error(error); return ''; } }).join('\n')
 		).join('\n')
 		+'\n'+ options.advanced.children.hideHeader.value
-		+'\n'+ String.raw`.tab.tst-search\:searching:not(.pinned)::after { content: attr(data-tab-id); padding: 0 0 0 .5em; }`,
+		+'\n'+ String.raw`
+			:root.right .tab.tst-search\:searching:not(.pinned)::before,
+			:root.left  .tab.tst-search\:searching:not(.pinned)::after {
+				content: attr(data-tab-id); display: flex;
+				background: var(--tab-surface); color: var(--tab-text); border-top: 1px solid var(--tab-border);
+				justify-content: center; align-items: center;
+			}
+			:root.right .tab.tst-search\:searching:not(.pinned)::before { padding: 0 0px 0 5px; }
+			:root.left  .tab.tst-search\:searching:not(.pinned)::after  { padding: 0 5px 0 0px; }
+			tab-item { flex-direction: row; }
+			tab-item-substance { flex-grow: 1; position: static; }
+			:root.right .contextual-identity-marker { position: absolute; left:  0px; }
+			:root.left  .contextual-identity-marker { position: absolute; right: 0px; }
+		`,
 		subPanel: {
 			title: manifest.name,
 			url: Runtime.getURL('src/content/embed.html'),
@@ -267,7 +281,7 @@ async function focusActiveTab({
 	debug && console.info('TST Search: focusActiveTab', windowId, this, ...arguments); // eslint-disable-line no-invalid-this
 	const tabId = States.get(windowId).tabId; if (tabId >= 0) {
 		(await Tabs.update(tabId, { active: true, }));
-		(await ViewsP).getViews().find(_=>_.name === 'panel')?.view?.close();
+		Views.getViews().find(_=>_.name === 'panel')?.view?.close();
 		options.search.children.clearAfterFocus.value && (await doSearch({ windowId, term: '', }));
 	} return tabId;
 } catch (error) { notify.error('Tab Focus Failed', error); } return null; }
@@ -293,7 +307,7 @@ async function onSearched({
 
 const { getOptions, onOptions, } = (() => { // let panel instances know about `options.panel.children.*.value`
 	function getOptions() { return Object.fromEntries(
-		Object.entries(options.panel.children).map(pair => [ pair[0], pair[1].value, ])
+		Object.entries(options.panel.children).map(pair => [ pair[0], (/**@type{any}*/(pair[1]).value), ])
 	); }
 	async function onOptions(/**@type{Events.Listener<[ Record<string, any>, ]>}*/listener) {
 		on.options(listener, { owner: 'onDisconnect' in this ? this : null, }); // eslint-disable-line no-invalid-this
@@ -318,7 +332,7 @@ Commands.onCommand.addListener(async function onCommand(command) { try { {
 } switch (command.replace(/_\d$/, '')) {
 	case 'globalFocusKey': {
 		// can't focus sidebar, so open/focus the browserAction popup
-		const panel = /**@type{Window}*/((await ViewsP).getViews().find(_=>_.name === 'panel')?.view);
+		const panel = /**@type{Window}*/(Views.getViews().find(_=>_.name === 'panel')?.view);
 		const input = /**@type{HTMLInputElement}*/(panel?.document.querySelector('#term'));
 		const prev = lastGlobalFocus; lastGlobalFocus = Date.now();
 		if (lastGlobalFocus - prev < 300) { // double tap
