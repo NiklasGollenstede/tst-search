@@ -2,7 +2,7 @@
 
 import Browser from 'web-ext-utils/browser/index.esm.js'; const { Windows, } = Browser;
 import Background from '../background/index.esm.js';
-import render from '../content/form.esm.js';
+import renderForm from '../content/form.esm.js';
 
 export default async function(/**@type{Window}*/window) { const { document, } = window;
 
@@ -12,7 +12,7 @@ const { RPC, } = (await Background);
 const windowId = (await Windows.getCurrent()).id;
 const initialTerm = (await RPC.getTerm({ windowId, }));
 
-const { applyOptions, } = (await render(window, { RPC, windowId, initialTerm, }));
+const { applyOptions, } = (await renderForm(window, { RPC, windowId, initialTerm, }));
 
 const term = /**@type{HTMLInputElement}*/(document.querySelector('#term')); term.focus();
 

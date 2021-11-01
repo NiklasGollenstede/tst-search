@@ -29,7 +29,7 @@ export async function updateCommand(name, count, values) {
  * @template {any[]} ArgsT
  * @param  {(...args: ArgsT) => void}  callback  The function to call.
  * @param  {number}   time      The no-more-calls timeout duration in ms.
- * @return                      Asynchronous, debounced version of callback.
+ * @return                      Asynchronous, debounced version of callback, which returns the `setTimeout` reference.
  */
 export function debounce(callback, time) {
 	let timer = null;
@@ -38,4 +38,3 @@ export function debounce(callback, time) {
 		return (timer = setTimeout(() => callback.apply(this, arguments), time)); // eslint-disable-line no-invalid-this
 	});
 }
-

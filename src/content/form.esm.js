@@ -11,7 +11,7 @@ return dom; })();
 
 /** Renders the interactive search panel into an empty `Window`. */
 export default async function render(/**@type{Window}*/window, {
-	windowId = -1, destructive = false, initialTerm = '', RPC, onWindowId,
+	windowId = -1, destructive = false, initialTerm = '', RPC, onWindowId = null,
 } = {
 	windowId: -1, destructive: !!false, initialTerm: '',
 	RPC: /**@type{Await<typeof import('../background/index.esm.js').default>['RPC']}*/(null),
@@ -26,6 +26,7 @@ export default async function render(/**@type{Window}*/window, {
 	initialTerm && (inputs.term.value = initialTerm);
 
 	async function doSearch(options = { }) {
+		if (globalThis.closing) { return; }
 		const form = { ...Object.fromEntries(inputNames.map(name => [ name, value(inputs[name]), ])), windowId, ...options, };
 		console.info('TST Search: searching for:', form);
 		setResult((await RPC.doSearch(form)));

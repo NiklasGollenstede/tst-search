@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 * fix highlighting, esp. with TST's "sidebar" theme
 * fix scrolling to collapsed tabs
+* (attempt) fix clearing search via hotkey
 
 
 ## v[0.0.3] - 2021-06-08

@@ -215,9 +215,10 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 		default: true, children: {
 			hideHeader: {
 				title: 'Hide Header',
-				description: `Hides the header above the search, that says something like "${manifest.name}". Requires re-registering above. On older versions of TST (before v3.7.5), also make sure to correctly size the panel before.<br>NOTE: That header is not part of this extension, but of TST itself, and from a UX perspective, should absolutely be there (by default). It may (in the future?) also be used to switch sub panels or do any number of other things. Please DO NOT raise issues about anything like that with TST while this option is active!`,
+				description: `Hides the header above the search, that says something like "${manifest.name}" and allows switching between different sub-panels. Requires re-registering above.<br>
+				NOTE: That header is not part of this extension, but of TST itself, and from a UX perspective, should absolutely be there (by default). Without it, you will not be able to switch between sub-panels (if there is more than one registered) or do any number of other/future things. Please DO NOT raise issues about anything like that with TST while this option is active!`,
 				default: '',
-				input: { type: 'boolInt', suffix: `I vow to have read the above and not to annoy TST's authors about it.`, off: '', on: `
+				input: { type: 'boolInt', suffix: `I vow to have read the above and will not annoy TST's authors about it.`, off: '', on: `
 					#subpanel-container { height: 35px !important; }
 					#subpanel-header { display: none !important; }
 				`, },

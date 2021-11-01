@@ -43,7 +43,7 @@ const TST = tstApi({
 			:root.right .tab.tst-search\:searching:not(.pinned)::before { padding: 0 0px 0 5px; }
 			:root.left  .tab.tst-search\:searching:not(.pinned)::after  { padding: 0 5px 0 0px; }
 			tab-item { flex-direction: row; }
-			tab-item-substance { flex-grow: 1; position: static; }
+			tab-item-substance { flex-grow: 1; /* position: static; */ }
 			:root.right .contextual-identity-marker { position: absolute; left:  0px; }
 			:root.left  .contextual-identity-marker { position: absolute; right: 0px; }
 		`,
@@ -160,8 +160,8 @@ async function doSearch({
 	debug && console.info('TST Search: doSearch', windowId, this, ...arguments); // eslint-disable-line no-invalid-this
 
 	// save search flags
-	Object.entries({ matchCase, wholeWord, regExp, }).forEach(([ name, value, ]) => {
-		options.panel.children[name].value = !!value;
+	[ 'matchCase', 'wholeWord', 'regExp', ].forEach(name => {
+		if (name in arguments[0]) { options.panel.children[name].value = !!arguments[0][name]; }
 	});
 
 	if (!TST.isRegistered) { try {
@@ -330,9 +330,8 @@ const { getOptions, onOptions, } = (() => { // let panel instances know about `o
 		on.options(listener, { owner: 'onDisconnect' in this ? this : null, }); // eslint-disable-line no-invalid-this
 		return getOptions();
 	}
-	const on = { options: /**@type{Events.Event<[ Record<string, any>, ]>}*/(null), };
-	const fireOptions = setEvent(on, 'options');
-	options.panel.onAnyChange(() => fireOptions([ getOptions(), ]));
+	const on = { options: /**@type{Events.Event<[ Record<string, any>, ]>}*/(null), }, fireOptions = setEvent(on, 'options');
+	options.panel.onAnyChange(debounce(() => fireOptions([ getOptions(), ]), 100));
 	return { async getOptions() { return getOptions(); }, onOptions, };
 })();
 
@@ -349,17 +348,17 @@ Commands.onCommand.addListener(async function onCommand(command) { try { {
 } switch (command.replace(/_\d$/, '')) {
 	case 'globalFocusKey': {
 		// can't focus sidebar, so open/focus the browserAction popup
-		const panel = /**@type{Window}*/(Views.getViews().find(_=>_.name === 'panel')?.view);
+		const panel = /**@type{Window & typeof globalThis & { closing?: boolean, }}*/(Views.getViews().find(_=>_.name === 'panel')?.view);
 		const input = /**@type{HTMLInputElement}*/(panel?.document.querySelector('#term'));
 		const prev = lastGlobalFocus; lastGlobalFocus = Date.now();
 		if (lastGlobalFocus - prev < 300) { // double tap
-			panel?.close(); (await doSearch({ term: '', }));
+			panel?.close(); panel && (panel.closing = true); (await doSearch({ term: '', }));
 		} else if (input) {
 			if (input.matches(':focus')) {
 				// can't listen to ESC press, so clear on redundant focus command
-				input.value = ''; input.dispatchEvent(new /**@type{any}*/(panel).Event('input'));
+				input.value = ''; input.dispatchEvent(new panel.Event('input'));
 			} else {
-				panel.close(); (await BrowserAction.openPopup()); // focus
+				panel.close(); panel.closing = true; (await BrowserAction.openPopup()); // focus
 			}
 		} else {
 			(await BrowserAction.openPopup());
