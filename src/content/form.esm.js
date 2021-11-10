@@ -10,7 +10,7 @@ const dom = (async () => { // avoid global await, until it is supported by AMO (
 return dom; })();
 
 /** Renders the interactive search panel into an empty `Window`. */
-export default async function render(/**@type{Window}*/window, {
+export default async function render(/**@type{Window & { closing?: boolean, }}*/window, {
 	windowId = -1, destructive = false, initialTerm = '', RPC, onWindowId = null,
 } = {
 	windowId: -1, destructive: !!false, initialTerm: '',
@@ -26,7 +26,7 @@ export default async function render(/**@type{Window}*/window, {
 	initialTerm && (inputs.term.value = initialTerm);
 
 	async function doSearch(options = { }) {
-		if (globalThis.closing) { return; }
+		if (window.closing) { return; }
 		const form = { ...Object.fromEntries(inputNames.map(name => [ name, value(inputs[name]), ])), windowId, ...options, };
 		console.info('TST Search: searching for:', form);
 		setResult((await RPC.doSearch(form)));
