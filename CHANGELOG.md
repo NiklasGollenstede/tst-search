@@ -39,6 +39,6 @@ Initial Proof of Concept that the TST sub-panel API works. See announcement: <ht
 
 
 [Unreleased]: https://github.com/NiklasGollenstede/tst-search/compare/v0.0.4b33...HEAD
-[0.0.4]: https://github.com/NiklasGollenstede/tst-search/compare/v0.0.4b33...v0.0.3b30
+[0.0.4]: https://github.com/NiklasGollenstede/tst-search/compare/v0.0.3b30...v0.0.4b33
 [0.0.3]: https://github.com/NiklasGollenstede/tst-search/compare/66345ea1cfb685675bbb2e6edb6020a667c28bcf...v0.0.3b30
 [init]: https://github.com/NiklasGollenstede/tst-search/commit/66345ea1cfb685675bbb2e6edb6020a667c28bcf

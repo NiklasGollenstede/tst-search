@@ -11,7 +11,7 @@
  *                                                   of the inbound messages, and the `params` argument is the received message.
  * @param {(reason: any) => void=}
  *                           options.onError         Optional. Handler for non-critical errors.
- * @param {boolean=}         options.debug           Optional. Whether to print on messages to and from TST. This is copied to the return object and can be modified there.
+ * @param {boolean=}         options.debug           Optional. Whether to print messages to and from TST. This is copied to the return object and can be modified there.
  * @returns {{
  *     register: () => Promise<void>,
  *     unregister: () => Promise<void>,

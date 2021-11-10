@@ -11,7 +11,7 @@ This is an extension for the browser extension <a href="https://github.com/piroo
     <li> start searching with a global search hotkey (Ctrl+Shift+F) </li>
     <li> customize the filtered tabs and the search panel </li>
     <li> cycle through results and then switch to the tabs </li>
-    <li> search case sensitive, as whole word, or by regular expression </li>
+    <li> search by full text, keywords or regular expression, optionally case sensitive, as whole word </li>
     <li> show and search by tab ID </li>
     <li> search by any tab property </li>
 </ul>
@@ -21,7 +21,7 @@ This is an extension for the browser extension <a href="https://github.com/piroo
 
 There are quite a lot of things that can, but don't need to, be changed in the extensions options. The descriptions of the options also explain how some of the more advanced search features work.
 Should the search bar not show up after installing this extension, then have a look at the top of the options page as well.
-The options can be opened by either going to `about:addons` > "Extensions" > "TST Tab Search" > "Preferences", or right clicking the icon at the top right of the browser > "Manage Extension" > "Preferences". Should the icon not be there, then right click any of the other icons, select "Customize Toolbar" (last entry) and look on that page.
+The options can be opened by either going to `about:addons` > "Extensions" > "TST Tab Search" > "Preferences", or right clicking the icon at the top right of the browser > "Manage Extension" > "Preferences". Should the icon not be there, then right click any of the other icons, select "Customize Toolbar" (last entry) and add it from that page.
 
 Many thanks to TST's author <a href="https://github.com/piroor">piroor</a>, who has not only developed TST as a great standalone extension, but also designed a very good API for other extensions to interact and integrate with TST. With that, writing the initial version of this extension from scratch took only about two long afternoons (but refining it took a lot longer)
 
@@ -39,17 +39,21 @@ This extension only momentarily changes how tabs are displayed in the sidebar, b
 
 ![](./resources/screenshot-default.png)
 Default view of search results in Firefox 89 (other screenshots have customized options).
+<br><br>
 
 ![](./resources/screenshot-visuals.png)
 Highlighting search results in bold orange, the currently selected result in bold blue, and parents of search results in green.
 All other tabs are shrunk and dimmed.
 Pressing Ctrl+Enter will switch to the blue tab.
+<br><br>
 
 ![](./resources/screenshot-global.png)
 The global hotkey allows searching (and then switching to) tabs without moving the cursor. For technical reasons, the search panel has to open in the little popup at the top.
+<br><br>
 
 ![](./resources/screenshot-by-id.png)
 There is an option to display the tab IDs while the search panel is focused, to the quickly switch to tabs by id.
+<br><br>
 
 ![](./resources/screenshot-modes.png)
 Additional search modes: case sensitive, as whole word, or by regular expression.
