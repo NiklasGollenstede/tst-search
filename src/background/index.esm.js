@@ -44,8 +44,8 @@ const TST = tstApi({
 			:root.left  .tab.tst-search\:searching:not(.pinned)::after  { padding: 0 5px 0 0px; }
 			tab-item { flex-direction: row; }
 			tab-item-substance { flex-grow: 1; /* position: static; */ }
-			:root.right .contextual-identity-marker { position: absolute; left:  0px; }
-			:root.left  .contextual-identity-marker { position: absolute; right: 0px; }
+			:root.right tab-item:not(.faviconized) .contextual-identity-marker { position: absolute; left:  0px; }
+			:root.left  tab-item:not(.faviconized) .contextual-identity-marker { position: absolute; right: 0px; }
 		`,
 		subPanel: {
 			title: manifest.name,
