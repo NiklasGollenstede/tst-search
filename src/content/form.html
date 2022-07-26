@@ -77,7 +77,9 @@
 	#options input { display: none; }
 
 	/* theme */
+	html { background-color: var(--page-bgc); }
 	#term { background-color: var(--input-bgc); color: var(--input-fgc); }
+	#term:placeholder-shown { }
 	#options>div,
 	#options>label {
 		color: var(--button-fgc);
@@ -86,13 +88,15 @@
 	}
 	#options>label>div { border-color: var(--button-fgc); }
 	/* light */ :root {
-		--input-bgc: #f9f9fa;
+		--page-bgc: #f9f9fb;
+		--input-bgc: #f0f0f4;
 		--input-fgc: #222;
 		--button-bgc: #0002;
 		--button-bdc: #0005;
 		--button-fgc: #000;
 	}
 	:root.dark-theme {
+		--page-bgc: #2a2a2e;
 		--input-bgc: #1D2328;
 		--input-fgc: #ddd;
 		--button-bgc: #fff3;

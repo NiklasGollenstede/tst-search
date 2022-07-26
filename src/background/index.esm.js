@@ -44,8 +44,8 @@ const TST = tstApi({
 			:root.left  .tab.tst-search\:searching:not(.pinned)::after  { padding: 0 5px 0 0px; }
 			tab-item { flex-direction: row; }
 			tab-item-substance { flex-grow: 1; /* position: static; */ }
-			:root.right tab-item:not(.faviconized) .contextual-identity-marker { position: absolute; left:  0px; }
-			:root.left  tab-item:not(.faviconized) .contextual-identity-marker { position: absolute; right: 0px; }
+			:root.right .tab:not(.pinned) .contextual-identity-marker { position: absolute; left:  0px; }
+			:root.left  .tab:not(.pinned) .contextual-identity-marker { position: absolute; right: 0px; }
 		`,
 		subPanel: {
 			title: manifest.name,
@@ -85,12 +85,12 @@ options.result.onAnyChange(() => TST.register().catch(notify.error));
 /// extension logic
 
 const classes = {
-	matching: [ 'tst-search:matching', ],
-	hasChild: [ 'tst-search:child-matching', ],
-	hidden: /**@type{string[]}*/([ ]),
-	failed: [ 'tst-search:not-matching', ],
-	active: [ 'tst-search:active', ],
-	searching: [ 'tst-search:searching', ],
+	matching: [ 'tst-search:matching', ], // applied to all tabs matching the search
+	hasChild: [ 'tst-search:child-matching', ], // applied to all tabs who have an "offspring" that is `matching` (potentially in addition to `matching` themselves)
+	hidden: /**@type{string[]}*/([ ]), // applied to `.hidden` tabs
+	failed: [ 'tst-search:not-matching', ], // applied to tabs that are neither `matching` nor `hasChild`
+	active: [ 'tst-search:active', ], // applied to a single one of the `matching` tabs
+	searching: [ 'tst-search:searching', ], // applied to all tabs while the search bar is focused
 };
 let cache = /**@type{{ tabs: Tab[] & { byId: Map<number, Tab>, all: Tab[], }, windowId: number, } | null}*/(null);
 const queueClearCache = debounce(() => { cache = null; }, 30e3);
@@ -247,7 +247,7 @@ async function doSearch({
 	else if (!result.matching.has(tabs.byId.get(state.tabId))) { // prev. active tab is no longer a valid result
 		const prev = tabs.byId.get(state.tabId);
 		state.tabId = (matching.find(tab => tab.index > prev.index) || matching[0]).id;
-	} // keep pre. active tab
+	} // keep prev. active tab
 	if (typeof seek === 'boolean') { if (matching.length > 1) {
 		const current = matching.indexOf(tabs.byId.get(state.tabId));
 		if (seek) { state.tabId = matching[current + 1 < matching.length ? current + 1 : 0].id; }
