@@ -35,11 +35,11 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 			},
 			hideClear: {
 				default: false,
-				input: { type: 'boolean', suffix: `Hide "Clear Search" Button`, },
+				input: { type: 'boolean', suffix: `Hide "Clear Search" Button.`, },
 			},
 			hideCount: {
 				default: false,
-				input: { type: 'boolean', suffix: `Hide Result Counter/Status`, },
+				input: { type: 'boolean', suffix: `Hide Result Counter/Status.`, },
 			},
 			darkTheme: {
 				default: null,
@@ -97,7 +97,7 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 							.tab:not(.pinned).tst-search\:child-matching :is(.label, .label-content) { color: ${globalThis.CSS.escape(color).replace('\\#', '#')}; }
 						` : '', ],
 						[ 'hide', false, 'Hide Completely', String.raw`
-							.tab.tst-search\:child-matching:not(.tst-search\:matching) { display: none; }
+							.tab.tst-search\:child-matching { display: none; }
 						`, ],
 					]),
 				},
@@ -166,7 +166,7 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 				title: 'Clear Search after Switching to Tab',
 				description: `Pressing <code>Ctrl</code>+<code>Enter</code> while the search bar has focus will switch tho the active result (if any).`,
 				default: false,
-				input: { type: 'boolean', suffix: `Clear search after switching`, },
+				input: { type: 'boolean', suffix: `Clear search after switching.`, },
 			},
 			matchKeywords: {
 				title: 'Keyword Matching',
@@ -178,7 +178,7 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 				default: [ [ false, false, ], ],
 				input: [
 					{ type: 'boolean', suffix: `When entering a number, search by tab ID (only). (Same as searching for <code>id: &lt;number&gt;</code> with "Tab Property Prefixes" active)`, },
-					{ type: 'boolean', prefix: '<br>', suffix: `Show tab IDs while searching`, },
+					{ type: 'boolean', prefix: '<br>', suffix: `Show tab IDs while searching.`, },
 				],
 			},
 			fieldsPrefix: {
@@ -224,6 +224,13 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 				`, },
 			},
 		},
+	},
+	export: {
+		default: true, input: [
+			{ type: 'control', label: `Export`, id: 'export', suffix: `changed /`, },
+			{ type: 'control', label: `Reset`,  id: 'reset',  suffix: `all /`, },
+			{ type: 'control', label: `Import`, id: 'import', suffix: `saved settings.`, },
+		],
 	},
 	debug: {
 		title: 'Debug Level',

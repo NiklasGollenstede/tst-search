@@ -26,7 +26,7 @@ export default async function render(/**@type{Window & { closing?: boolean, }}*/
 	initialTerm && (inputs.term.value = initialTerm);
 
 	async function doSearch(options = { }) {
-		if (window.closing) { return; }
+		if (window.closing) { return; } // TODO: this still does not work ...
 		const form = { ...Object.fromEntries(inputNames.map(name => [ name, value(inputs[name]), ])), windowId, ...options, };
 		console.info('TST Search: searching for:', form);
 		setResult((await RPC.doSearch(form)));
