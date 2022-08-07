@@ -1,5 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import Browser from 'web-ext-utils/browser/index.esm.js';
+
 
 /**
  * Helper to set the values of a (list of alternative) commands.
@@ -9,16 +11,14 @@
  * @param {readonly string[]}  values  Shortcut values. `null` or missing values will `.reset()` the command.
  */
 export async function updateCommand(name, count, values) {
-	const commands = (await browser.commands.getAll());
 	for (let i = 0; i < count; ++i) { // `value.length` may be smaller than `count`
-		const id = name + (i ? '_'+ i : ''), command = commands.find(_=>_.name === id);
-		command.shortcut = values[i] || null;
-		if (command.shortcut) { try {
-			(await browser.commands.update(command));
+		const id = name + (i ? '_'+ i : '');
+		if (values[i]) { try {
+			(await Browser.commands.update({ name: id, shortcut: values[i].replace(/^Ctrl *[+]/, 'MacCtrl +'), }));
 		} catch (error) {
-			browser.commands.reset(id); throw error;
+			Browser.commands.reset(id); throw error;
 		} } else {
-			browser.commands.reset(id); // can't remove, so reset instead, which removes if default is unset
+			Browser.commands.reset(id); // can't remove, so reset instead, which removes if default is unset
 		}
 	}
 }

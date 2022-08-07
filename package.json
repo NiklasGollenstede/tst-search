@@ -1,6 +1,6 @@
 {
 	"name": "tst-search",
-	"version": "0.0.5",
+	"version": "0.0.6",
 	"title": "TST Tab Search",
 	"description": "Filter Tree Style Tab's sidebar by search terms.",
 	"author": "Niklas Gollenstede",
@@ -24,9 +24,9 @@
 		"es6lib": "0.0.3",
 		"multiport": "0.3.1",
 		"pbq": "0.6.1",
-		"web-ext-build": "0.2.3",
+		"web-ext-build": "0.2.4",
 		"web-ext-event": "0.3.0",
-		"web-ext-utils": "0.2.1"
+		"web-ext-utils": "0.2.2"
 	},
 	"devDependencies": {
 		"@typescript-eslint/eslint-plugin": "^4.1.1",

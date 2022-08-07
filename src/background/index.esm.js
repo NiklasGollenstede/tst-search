@@ -68,7 +68,7 @@ TST.register().catch(() => null) // may very well not be ready yet
 options.result.onAnyChange(() => TST.register().catch(notify.error));
 
 /**
- * @typedef {object} Tab - Browser Tab (dummy) interface.
+ * @typedef {object} Tab Browser Tab (dummy) interface.
  * @property {number} id
  * @property {number} index
  * @property {boolean} active
@@ -120,6 +120,24 @@ const States = {
 };
 
 
+/**
+ * @typedef {object} SearchOptions Search options. All optional, see the individual descriptions.
+ * @property {number=}     windowId        Optional. The ID of the window to search.
+ *                                         Defaults to `this?.windowId` (which may be set to the message `sender`) or `Windows.getCurrent().id`.
+ * @property {string=}     term            The term to search for. Empty/falsy clears the search.
+ * @property {boolean=}    matchCase       See `../common.options.js#model.panel.children.matchCase.input.suffix`.
+ * @property {boolean=}    wholeWord       See `../common.options.js#model.panel.children.wholeWord.input.suffix`.
+ * @property {boolean=}    regExp          See `../common.options.js#model.panel.children.regExp.input.suffix`.
+ * @property {boolean=}    fieldsPrefix    See `../common.options.js#model.search.children.fieldsPrefix.description`.
+ * @property {string[]=}   fieldsDefault   See `../common.options.js#model.search.children.fieldsPrefix.description`.
+ * @property {boolean=}    cached          On any search, the fetched tab information and the `.windowId` is stored for a while.
+ *                                         If another search with the same `.windowId` and `.cached: true` is made in the meantime,
+ *                                         the tab information is reused (to improve performance).
+ * @property {boolean=}    seek            None empty search results mark one of their tabs as active, applying `classes.active` to it,
+ *                                         and making it the target of `focusActiveTab`. The active tab's ID is saved per window,
+ *                                         and maintained if it still matches the search, otherwise the next matching tab is selected.
+ */
+
 /** @typedef { { windowId: number, inputTerm: string, matches: number, } & (
  *       { index:  number,    cleared?: undefined, failed?: undefined, }
  *     | { index?: undefined, cleared:  true,      failed?: undefined, }
@@ -128,22 +146,6 @@ const States = {
 
 /**
  * Does the actual search on the tabs in a window. Called from the panel via messaging.
- * @param {object}      options                 Search options. All optional, see below.
- * @param {number=}     options.windowId        Optional. The ID of the window to search.
- *                                              Defaults to `this?.windowId` (which may be set to the message `sender`) or `Windows.getCurrent().id`.
- * @param {string=}     options.term            The term to search for. Empty/falsy clears the search.
- * @param {boolean=}    options.matchCase       See `../common.options.js#model.panel.children.matchCase.input.suffix`.
- * @param {boolean=}    options.wholeWord       See `../common.options.js#model.panel.children.wholeWord.input.suffix`.
- * @param {boolean=}    options.regExp          See `../common.options.js#model.panel.children.regExp.input.suffix`.
- * @param {boolean=}    options.fieldsPrefix    See `../common.options.js#model.search.children.fieldsPrefix.description`.
- * @param {string[]=}   options.fieldsDefault   See `../common.options.js#model.search.children.fieldsPrefix.description`.
- * @param {boolean=}    options.cached          On any search, the fetched tab information and the `.windowId` is stored for a while.
- *                                              If another search with the same `.windowId` and `.cached: true` is made in the meantime,
- *                                              the tab information is reused (to improve performance).
- * @param {boolean=}    options.seek            None empty search results mark one of their tabs as active, applying `classes.active` to it,
- *                                              and making it the target of `focusActiveTab`. The active tab's ID is saved per window,
- *                                              and maintained if it still matches the search, otherwise the next matching tab is selected.
- *                                              Then iff `.seek` is `true` the next next, iff `false` the previous matching tab is activated.
  * @returns {Promise<SearchResult>}             The number of search `matches`, plus either:
  *                                              * if `term` was empty: `cleared: true`;
  *                                              * on search success: the active tab's index (or `-1`);
