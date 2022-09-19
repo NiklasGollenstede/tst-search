@@ -3,6 +3,7 @@
 import Browser from 'web-ext-utils/browser/index.esm.js'; const { manifest, } = Browser;
 import notify from 'web-ext-utils/utils/notify.esm.js';
 import Storage from 'web-ext-utils/browser/storage.esm.js'; const { sync: storage, } = Storage;
+import OptionsPage from 'web-ext-utils/options/editor/inline.esm.js';
 import options from '../common/options.esm.js';
 import Background from '../background/index.esm.js'; const { TST, } = Background;
 
@@ -45,7 +46,6 @@ async function onCommand({ name, }, buttonId) { try { switch (name) {
 	} break;
 } } catch (error) { notify.error(error); } }
 
-if (false) { import('web-ext-utils/options/editor/inline.js'); } // eslint-disable-line
-(await (await globalThis.require.async('node_modules/web-ext-utils/options/editor/inline'))({ document, onCommand, }, location));
+OptionsPage({ document, onCommand, }, location);
 
 }

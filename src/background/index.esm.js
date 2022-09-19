@@ -4,17 +4,11 @@ import tstApi from './tst-api.esm.js';
 import { updateCommand, debounce, } from './util.esm.js';
 import Browser from 'web-ext-utils/browser/index.esm.js';
 const { manifest, Commands, BrowserAction, Runtime, Tabs, Windows, } = Browser;
+import Views from 'web-ext-utils/loader/views.esm.js';
 import notify from 'web-ext-utils/utils/notify.esm.js';
 import Port, { web_ext_Port, } from 'multiport/index.esm.js';
 import Events, { setEvent, } from 'web-ext-event'; void Events;
 import options from '../common/options.esm.js';
-
-if (false) { /* `define`ed dependencies, for static tracking as `import` dependencies */ // eslint-disable-line
-	// @ts-ignore
-	import('web-ext-utils/loader/views.js');
-}
-// Can't be proted to ESM yet: https://github.com/mozilla/addons-linter/issues/3741
-let Views; globalThis.require.async('node_modules/web-ext-utils/loader/views').then(exp => (Views = exp));
 
 let debug = false; options.debug.whenChange(([ value, ]) => { debug = value; });
 
@@ -159,7 +153,7 @@ async function doSearch({
 	cached = false, seek = undefined,
 } = { }) { try {
 	(windowId != null && windowId !== -1) || (windowId = (await Windows.getCurrent()).id);
-	debug && console.info('TST Search: doSearch', windowId, this, ...arguments); // eslint-disable-line no-invalid-this
+	debug && console.info('TST Tab Search: doSearch', windowId, this, ...arguments); // eslint-disable-line no-invalid-this
 
 	// save search flags
 	[ 'matchCase', 'wholeWord', 'regExp', ].forEach(name => {

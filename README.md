@@ -8,12 +8,12 @@ Search for or filter the Tabs in TST's sidebar, and quickly find and activate th
 <!-- AMO long description: (AMO keeps line breaks, and supports a few HTML tags. Copy from here till the first MarkDown heading, but do remove the image tags.) -->
 
 This is an extension for the browser extension <a href="https://github.com/piroor/treestyletab#readme">Tree Style Tabs</a> (TST). It adds a search box to TST's sidebar, allowing to search the tabs in the current window. With TST Tab Search you can: <ul>
-    <li> start searching with a global search hotkey (Ctrl+Shift+F) </li>
-    <li> customize the filtered tabs and the search panel </li>
-    <li> cycle through results and then switch to the tabs </li>
-    <li> search by full text, keywords or regular expression, optionally case sensitive, as whole word </li>
-    <li> show and search by tab ID </li>
-    <li> search by any tab property </li>
+    <li> Start searching with a global search hotkey (Ctrl+Shift+F). </li>
+    <li> Customize the filtered tabs and the search panel. </li>
+    <li> Cycle through results and then switch to the tabs. </li>
+    <li> Search by full text, keywords or regular expression, optionally case sensitive, as whole word. </li>
+    <li> Show and search by tab IDs. </li>
+    <li> Search by any tab property. </li>
 </ul>
 
 <img alt="Tab searches with different settings" src="./resources/screenshot-merged.png" width="600px"> <!-- remove this for AMO -->

@@ -33,7 +33,7 @@ export default function tstAPI({ getManifest, methods = [ ], events = { __proto_
 
 	async function register() {
 		const tstManifest = { listeningTypes: [ ...Object.keys(events), 'wait-for-shutdown', ], ...getManifest(), };
-		API.debug && console.info(ownName +': registering with TST ...', tstManifest);
+		//API.debug && console.info(ownName +': registering with TST ...', tstManifest);
 		(await TST.registerSelf(tstManifest));
 		API.isRegistered = true;
 	}
