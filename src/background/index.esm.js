@@ -28,18 +28,9 @@ const TST = tstApi({
 		).join('\n')
 		+'\n'+ options.advanced.children.hideHeader.value
 		+'\n'+ String.raw`
-			:root.right .tab.tst-search\:searching:not(.pinned)::before,
-			:root.left  .tab.tst-search\:searching:not(.pinned)::after {
-				content: attr(data-tab-id); display: flex;
-				background: var(--tab-surface); color: var(--tab-text); border-top: 1px solid var(--tab-border);
-				justify-content: center; align-items: center;
+			.tab.${globalThis.CSS.escape(classes.searching[0])} tab-label .label-content::before {
+				content: attr(data-tab-id) ": ";
 			}
-			:root.right .tab.tst-search\:searching:not(.pinned)::before { padding: 0 0px 0 5px; }
-			:root.left  .tab.tst-search\:searching:not(.pinned)::after  { padding: 0 5px 0 0px; }
-			tab-item { flex-direction: row; }
-			tab-item-substance { flex-grow: 1; /* position: static; */ }
-			:root.right .tab:not(.pinned) .contextual-identity-marker { position: absolute; left:  0px; }
-			:root.left  .tab:not(.pinned) .contextual-identity-marker { position: absolute; right: 0px; }
 		`,
 		subPanel: {
 			title: manifest.name,
