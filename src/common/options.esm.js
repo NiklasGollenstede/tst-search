@@ -107,7 +107,7 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 				description: `Any tab that neither matches not has matching children.`,
 				default: true, children: {
 					styles: styles([
-						[ 'shrink', [ true, 50, ], [ { type: 'boolean', }, { prefix: 'Shrink Height to', type: 'integer', suffix: '%', }, ], (active, shrink = 50) => active ? String.raw`
+						[ 'shrink', [ false, 50, ], [ { type: 'boolean', }, { prefix: 'Shrink Height to', type: 'integer', suffix: '%', }, ], (active, shrink = 50) => active ? String.raw`
 							.tab:not(.pinned).collapsed:where(.tst-search\:matching, .tst-search\:child-matches, .tst-search\:not-matching) {
 								margin-top: 0; display: none;
 							}
@@ -120,7 +120,7 @@ const isBeta = manifest.applications.gecko.id.endsWith('-dev');
 						[ 'opacity', [ false, 60, ], [ { type: 'boolean', }, { prefix: 'Reduce Opacity to', type: 'integer', suffix: '%', }, ], (active, opacity = 60) => active ? String.raw`
 							.tab:not(.pinned).tst-search\:not-matching { opacity: ${(opacity/100).toFixed(6)}; }
 						` : '', [ { }, { from: 0, to: 100, }, ], ],
-						[ 'hide', false, 'Hide Completely', String.raw`
+						[ 'hide', true, 'Hide Completely', String.raw`
 							.tab.tst-search\:not-matching { display: none; }
 						`, ],
 					]),
